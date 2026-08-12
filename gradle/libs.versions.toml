@@ -1,0 +1,44 @@
+[versions]
+agp = "9.3.1"
+converterSimplexml = "3.0.0"
+fragmentKtx = "1.9.0"
+kotlinxCoroutinesAndroid = "1.3.9"
+retrofit = "3.0.0"
+robolectric = "4.16.1"
+tests-junit = "4.13.2"
+tests-androidx-junit = "1.3.0"
+tests-androidx-espressoCore = "3.7.0"
+appcompat = "1.7.1"
+material = "1.14.0"
+androidx-coreKtx = "1.19.0"
+androidx-activityKtx = "1.13.0"
+androidx-constraintlayout = "2.2.2"
+androidx-recyclerview = "1.4.0"
+androidx-viewmodel ="2.11.0"
+
+[libraries]
+androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtx" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-viewmodel" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-coreKtx" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "androidx-recyclerview" }
+androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "androidx-activityKtx" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "androidx-constraintlayout" }
+
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-converter-simplexml = { module = "com.squareup.retrofit2:converter-simplexml", version.ref = "converterSimplexml" }
+
+junit = { group = "junit", name = "junit", version.ref = "tests-junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "tests-androidx-junit" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "tests-androidx-espressoCore" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+
+[bundles]
+unitTestSuite = ["androidx-junit", "androidx-espresso-core"]
+androidTestSuite = ["junit", "robolectric", "androidx-junit"]
+

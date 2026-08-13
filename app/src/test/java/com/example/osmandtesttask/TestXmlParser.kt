@@ -1,7 +1,7 @@
 package com.example.osmandtesttask
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.osmandtesttask.data.remote.RemoteMapConfigParser
+import com.example.osmandtesttask.data.remote.parsers.RemoteRegionsListParser
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -65,7 +65,7 @@ class TestXmlParser {
     @Test
     fun testXml() {
         val inputStream = ByteArrayInputStream(testXml.toByteArray())
-        val mapConfigParser = RemoteMapConfigParser()
+        val mapConfigParser = RemoteRegionsListParser()
         val result = mapConfigParser.parse(inputStream)
         assertNotNull(result)
         val mapConfigR = result!!

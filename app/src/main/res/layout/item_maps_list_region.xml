@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/ListItem.MapRegion">
+
+    <ImageView
+        android:id="@+id/icon_view"
+        tools:src="@drawable/ic_map"
+        android:foregroundTint="@color/listItemIconTintColor"
+        android:layout_width="24dp"
+        android:layout_height="24dp"/>
+    <TextView
+        android:layout_marginHorizontal="16dp"
+        android:id="@+id/region_name"
+        style="@style/ListItem.MapRegion.Text"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        tools:text="Europe" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/download_button"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        app:icon="@drawable/ic_action_import"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        app:iconTint="@color/listItemIconTintColor" />
+</LinearLayout>

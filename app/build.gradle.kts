@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.koin.compiler)
 }
 
 android {
@@ -39,12 +40,15 @@ dependencies {
     implementation(libs.androidx.recyclerview)
 
     implementation(libs.androidx.lifecycle.viewmodel)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.simplexml)
 
     implementation(libs.kotlinx.coroutines.android)
 
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.android)
 
     testImplementation(libs.bundles.unitTestSuite)
     testImplementation(libs.bundles.androidTestSuite)

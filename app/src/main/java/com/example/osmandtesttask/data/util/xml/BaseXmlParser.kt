@@ -1,10 +1,10 @@
-package com.example.osmandtesttask.util.xml
+package com.example.osmandtesttask.data.util.xml
 
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 
-abstract class BaseTreeXmlParser() {
+abstract class BaseXmlParser() {
 
     @Throws(IOException::class, XmlPullParserException::class)
     protected fun parse(parser: XmlPullParser, rootContext: TagContext) {

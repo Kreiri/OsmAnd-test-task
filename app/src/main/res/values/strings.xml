@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">OsmandTestTask</string>
+
+    <string name="error_msg_maps_list_download_failed">Maps list download failed.</string>
+
+    <string name="screen_title_downlaod_maps">Download Maps</string>
 </resources>

@@ -1,28 +1,30 @@
-package com.example.osmandtesttask.data.remote
+package com.example.osmandtesttask.data.remote.parsers
 
 import android.util.Xml
-import com.example.osmandtesttask.util.xml.BaseTreeXmlParser
-import com.example.osmandtesttask.util.xml.TagContext
-import com.example.osmandtesttask.util.xml.readStringAttribute
+import com.example.osmandtesttask.data.remote.dto.RemoteRegionsList
+import com.example.osmandtesttask.data.remote.dto.RemoteRegion
+import com.example.osmandtesttask.data.util.xml.BaseXmlParser
+import com.example.osmandtesttask.data.util.xml.TagContext
+import com.example.osmandtesttask.data.util.xml.readStringAttribute
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
+import java.io.IOException
 import java.io.InputStream
 
-class RemoteMapConfigParser : BaseTreeXmlParser() {
-    fun parse(inputStream: InputStream): RemoteMapListConfig? {
-        return try {
-            inputStream.use { stream ->
-                val parser = Xml.newPullParser().apply {
-                    setInput(stream, null)
-                }
-                readRegionsList(parser)
+class RemoteRegionsListParser : BaseXmlParser() {
+    @Throws(IOException::class, XmlPullParserException::class)
+    fun parse(inputStream: InputStream): RemoteRegionsList {
+        val parsed = inputStream.use { stream ->
+            val parser = Xml.newPullParser().apply {
+                setInput(stream, null)
             }
-        } catch (e: Exception) {
-            null
+            readRegionsList(parser)
         }
+        return parsed
     }
 
-    private fun readRegionsList(parser: XmlPullParser): RemoteMapListConfig {
+    @Throws(IOException::class, XmlPullParserException::class)
+    private fun readRegionsList(parser: XmlPullParser): RemoteRegionsList {
         val rootContext = MapListConfigBuilder("regions_list")
         parse(parser, rootContext)
         val config = rootContext.data
@@ -32,15 +34,15 @@ class RemoteMapConfigParser : BaseTreeXmlParser() {
 
 class MapListConfigBuilder(override val contextTagName: String): TagContext {
     val regions = mutableListOf<RemoteRegion>()
-    private var mapConfig: RemoteMapListConfig? = null
-    override val data: RemoteMapListConfig
+    private var mapConfig: RemoteRegionsList? = null
+    override val data: RemoteRegionsList
         get() = mapConfig ?: throw RuntimeException("Tag data has not finished being read")
 
     override fun readAttributes(parser: XmlPullParser) {}
     override fun onText(text: String) {}
 
     override fun onEndTag() {
-        this.mapConfig = RemoteMapListConfig(regions.toList())
+        this.mapConfig = RemoteRegionsList(regions.toList())
     }
 
     override fun createChildContext(tagName: String): TagContext? {

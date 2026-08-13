@@ -1,15 +1,16 @@
-package com.example.osmandtesttask.data.remote
+package com.example.osmandtesttask.data.remote.dto
 
-import com.example.osmandtesttask.data.local.MapListConfig
-import com.example.osmandtesttask.data.local.Region
+import com.example.osmandtesttask.domain.models.RegionsList
+import com.example.osmandtesttask.domain.models.Region
 
-class RemoteMapListConfig(
+class RemoteRegionsList(
     val regions: List<RemoteRegion>
 ) {
-    fun toLocal(): MapListConfig {
+    fun toLocal(): RegionsList {
         val regions = regionsToLocal()
-        return MapListConfig(regions)
+        return RegionsList(regions)
     }
+
     private class RemoteNode(val region: RemoteRegion, val affixes: DownloadAffixes)
 
     private fun regionsToLocal(): List<Region> {

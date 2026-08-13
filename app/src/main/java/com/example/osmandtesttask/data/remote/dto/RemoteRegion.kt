@@ -1,7 +1,7 @@
-package com.example.osmandtesttask.data.remote
+package com.example.osmandtesttask.data.remote.dto
 
-import com.example.osmandtesttask.data.local.Region
-import com.example.osmandtesttask.data.local.RegionType
+import com.example.osmandtesttask.domain.models.Region
+import com.example.osmandtesttask.domain.models.RegionType
 
 
 class RemoteRegion(

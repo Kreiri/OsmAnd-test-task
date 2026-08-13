@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="listItemBackgroundColor">#ffffff</color>
+    <color name="listItemTextColor">#212121</color>
+    <color name="listItemIconTintColor">#727272</color>
+    <color name="listDividerColor">#e5e5e5</color>
+
+    <color name="backgroundColor">#F0F0F0</color>
+    <color name="appBarColor">#ff8800</color>
+    <color name="appBarTextColor">#ffffff</color>
 </resources>

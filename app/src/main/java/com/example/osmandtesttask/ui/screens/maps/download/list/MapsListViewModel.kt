@@ -34,4 +34,8 @@ class MapsListViewModel(
             _uiState.value = UIState.Success(parentRegion, regions)
         }
     }
+
+    fun requestDownload(region: Region) {
+        mapsManager.requestDownloadMap(region)
+    }
 }

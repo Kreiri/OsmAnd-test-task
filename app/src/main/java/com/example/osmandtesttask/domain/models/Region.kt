@@ -1,6 +1,6 @@
 package com.example.osmandtesttask.domain.models
 
-import java.util.Locale
+import com.example.osmandtesttask.common.capitalizeFirstChar
 
 data class Region(
     val name: String,
@@ -40,12 +40,7 @@ data class Region(
     }
 
     fun getLocalizedName(locale: String): String {
-        return getTranslation("name", locale) ?: capitalize(name, locale)
-    }
-
-    private fun capitalize(string: String, locale: String): String {
-        val l = Locale.forLanguageTag(locale)
-        return string.replaceFirstChar { if (it.isLowerCase()) it.titlecase(l) else it.toString() }
+        return getTranslation("name", locale) ?: name.capitalizeFirstChar(locale)
     }
 }
 data class ParsedTranslation(val fieldName: String, val locale: String, val value: String)

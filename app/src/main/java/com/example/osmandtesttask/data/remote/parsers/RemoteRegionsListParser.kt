@@ -1,8 +1,8 @@
 package com.example.osmandtesttask.data.remote.parsers
 
 import android.util.Xml
-import com.example.osmandtesttask.data.remote.dto.RemoteRegionsList
 import com.example.osmandtesttask.data.remote.dto.RemoteRegion
+import com.example.osmandtesttask.data.remote.dto.RemoteRegionsList
 import com.example.osmandtesttask.data.util.xml.BaseXmlParser
 import com.example.osmandtesttask.data.util.xml.TagContext
 import com.example.osmandtesttask.data.util.xml.readStringAttribute

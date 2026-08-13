@@ -1,7 +1,7 @@
 package com.example.osmandtesttask.data.remote.dto
 
-import com.example.osmandtesttask.domain.models.RegionsList
 import com.example.osmandtesttask.domain.models.Region
+import com.example.osmandtesttask.domain.models.RegionsList
 
 class RemoteRegionsList(
     val regions: List<RemoteRegion>

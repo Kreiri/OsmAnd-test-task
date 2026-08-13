@@ -15,6 +15,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "MAPS_DOWNLOAD_BASE_URL", "\"https://download.osmand.net\"")
+    }
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -43,7 +48,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.simplexml)
 
     implementation(libs.kotlinx.coroutines.android)
 

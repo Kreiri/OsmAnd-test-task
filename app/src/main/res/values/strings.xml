@@ -4,4 +4,8 @@
     <string name="error_msg_maps_list_download_failed">Maps list download failed.</string>
 
     <string name="screen_title_downlaod_maps">Download Maps</string>
+
+    <string name="notification_map_download_progress_text">Downloading map (%1$d): %2$s: %3$s%%</string>
+
+    <string name="notifications_channel_default">Notifications</string>
 </resources>

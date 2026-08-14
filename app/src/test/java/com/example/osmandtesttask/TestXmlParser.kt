@@ -2,9 +2,9 @@ package com.example.osmandtesttask
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.osmandtesttask.data.remote.parsers.RemoteRegionsListParser
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
-
-import org.junit.Assert.*
 import org.junit.runner.RunWith
 import java.io.ByteArrayInputStream
 

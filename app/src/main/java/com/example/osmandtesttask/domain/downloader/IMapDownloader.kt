@@ -12,8 +12,9 @@ interface IMapDownloader {
     val state: StateFlow<DownloaderState>
     val throttledState: StateFlow<DownloaderState>
 
-    val errors: Flow<DownloadError>
-}
+    val downloadsIndex: StateFlow<DownloadsIndex>
+
+    val errors: Flow<DownloadError> }
 
 sealed interface DownloaderState {
     object Empty : DownloaderState
@@ -51,3 +52,10 @@ sealed interface DownloadError {
     data class InsufficientStorage(override val download: DownloadTask): DownloadError
     data class Unknown(override val download: DownloadTask, val cause: Throwable): DownloadError
 }
+
+data class DownloadsIndex(val downloadedFiles: Set<DownloadedFileInfo>) {
+    companion object {
+        fun blank() = DownloadsIndex(emptySet())
+    }
+}
+data class DownloadedFileInfo(val filename: String, val downloadName: String)

@@ -3,11 +3,13 @@ package com.example.osmandtesttask.ui.screens.maps.download.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.osmandtesttask.domain.MapsManager
+import com.example.osmandtesttask.domain.downloader.DownloadedFileInfo
 import com.example.osmandtesttask.domain.downloader.DownloaderState
 import com.example.osmandtesttask.domain.models.Region
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 
@@ -16,7 +18,8 @@ sealed interface UIState {
     data class Success(
         val parentRegion: Region?,
         val regions: List<Region>,
-        val downloaderState: DownloaderState
+        val downloaderState: DownloaderState,
+        val downloadedFiles: Set<DownloadedFileInfo>
     ) : UIState
 }
 
@@ -32,19 +35,28 @@ class MapsListViewModel(
 
     val downloadErrors = mapsManager.downloadErrors
 
+    private val downloadsIndex = mapsManager.downloadsIndex
+
     init {
         subscribeToDownloadStateUpdates()
     }
 
     private fun subscribeToDownloadStateUpdates() {
         viewModelScope.launch {
-            mapsManager.downloadsState.collect { downloaderState ->
-                val currentState = _uiState.value
-                val newState = if (currentState is UIState.Success) {
-                    currentState.copy(downloaderState = downloaderState)
-                } else currentState
-                _uiState.value = newState
-            }
+            mapsManager.downloadsState
+                .combine(downloadsIndex) { downloaderState, downloadsIndex ->
+                    downloaderState to downloadsIndex
+                }
+                .collect { (downloaderState, downloadsIndex) ->
+                    val currentState = _uiState.value
+                    val newState = if (currentState is UIState.Success) {
+                        currentState.copy(
+                            downloaderState = downloaderState,
+                            downloadedFiles = downloadsIndex.downloadedFiles
+                        )
+                    } else currentState
+                    _uiState.value = newState
+                }
         }
     }
 
@@ -56,7 +68,8 @@ class MapsListViewModel(
                 UIState.Success(
                     parentRegion = null,
                     regions = data?.regions ?: emptyList(),
-                    downloaderState = mapsManager.downloadsState.value
+                    downloaderState = mapsManager.downloadsState.value,
+                    downloadedFiles = downloadsIndex.value.downloadedFiles
                 )
         } else {
             val parentRegion = data?.getRegionForIndexPath(path)
@@ -64,7 +77,8 @@ class MapsListViewModel(
             _uiState.value = UIState.Success(
                 parentRegion = parentRegion,
                 regions = regions,
-                downloaderState = mapsManager.downloadsState.value
+                downloaderState = mapsManager.downloadsState.value,
+                downloadedFiles = downloadsIndex.value.downloadedFiles
             )
         }
     }

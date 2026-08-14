@@ -7,7 +7,9 @@ import com.example.osmandtesttask.data.api.MapDownloadApiService
 import com.example.osmandtesttask.domain.downloader.DownloadError
 import com.example.osmandtesttask.domain.downloader.DownloadState
 import com.example.osmandtesttask.domain.downloader.DownloadTask
+import com.example.osmandtesttask.domain.downloader.DownloadedFileInfo
 import com.example.osmandtesttask.domain.downloader.DownloaderState
+import com.example.osmandtesttask.domain.downloader.DownloadsIndex
 import com.example.osmandtesttask.domain.downloader.IMapDownloader
 import com.example.osmandtesttask.domain.models.Region
 import kotlinx.coroutines.CoroutineScope
@@ -24,7 +26,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import retrofit2.HttpException
@@ -52,6 +53,9 @@ class MapDownloaderImpl(
     private val _state = MutableStateFlow<DownloaderState>(DownloaderState.Empty)
     override val state: StateFlow<DownloaderState> = _state.asStateFlow()
 
+    private val _downloadsIndex = MutableStateFlow(DownloadsIndex.blank())
+    override val downloadsIndex = _downloadsIndex.asStateFlow()
+
     private val lastThrottleFlowEmitTime = AtomicLong(0L)
     private val throttleInterval = 500L
     override val throttledState = _state.filter { state ->
@@ -73,6 +77,7 @@ class MapDownloaderImpl(
     override val errors = _errors.asSharedFlow()
 
     init {
+        collectDownloadedFilesInfo()
         launchQueue()
     }
 
@@ -129,18 +134,19 @@ class MapDownloaderImpl(
     private suspend fun processDownload(download: DownloadTask) {
         Logs.d("Downloader", "launching download ${download.downloadName}")
         withContext(Dispatchers.IO) {
-            val downloadFilename = composeDownloadFileName(download.downloadName)
-            val destination = File(outputDir, downloadFilename)
+            val filename = composeFileName(download.downloadName)
+            val destination = File(outputDir, filename)
             if (!validateFileLocation(destination, outputDir)) {
-                throw SecurityException("Path traversal check failed: $downloadFilename")
+                throw SecurityException("Path traversal check failed: $filename")
             }
+            val downloadDestination =
+                File(outputDir, composeDownloadFileName(download.downloadName))
 
-            val response = service.downloadMap(downloadFilename)
+            val response = service.downloadMap(filename)
             if (response.isSuccessful) {
-
                 Logs.d("Downloader", "received success response for ${download.downloadName}")
                 val body = response.body() ?: throw HttpException(response)
-                saveFileWithProgress(download, body, destination)
+                saveFileWithProgress(download, body, destination, downloadDestination)
             } else {
                 throw HttpException(response)
             }
@@ -156,9 +162,20 @@ class MapDownloaderImpl(
     private suspend fun saveFileWithProgress(
         download: DownloadTask,
         body: ResponseBody,
-        destination: File
+        destination: File,
+        downloadDestination: File
     ) {
-        body.toFileWithProgress(destination).collect { downloadState ->
+        body.toFileWithProgress(downloadDestination).collect { downloadState ->
+            if (downloadState == DownloadState.Finished) {
+                if (destination.exists()) destination.delete()
+                destination.parentFile?.mkdirs()
+                downloadDestination.renameTo(destination)
+                val info = DownloadedFileInfo(destination.name, download.downloadName)
+                val oldIndex = _downloadsIndex.value
+                val newIndex = oldIndex.copy(downloadedFiles = oldIndex.downloadedFiles + info)
+                _downloadsIndex.value = newIndex
+                writeIndexToFile(newIndex)
+            }
             updateState(download, downloadState)
         }
     }
@@ -215,8 +232,69 @@ class MapDownloaderImpl(
         launchQueue()
     }
 
+    private fun composeFileName(downloadName: String): String =
+        downloadName.capitalizeFirstChar(Locale.ENGLISH) + FILE_SUFFIX
+
     private fun composeDownloadFileName(downloadName: String): String =
-        (downloadName + "_2.obf.zip").capitalizeFirstChar(Locale.ENGLISH)
+        composeFileName(downloadName) + DOWNLOAD_FILE_SUFFIX
+
+
+    private fun collectDownloadedFilesInfo() {
+        externalScope.launch(Dispatchers.IO) {
+            val downloadedFileNames = outputDir.listFiles { file ->
+                file.name.endsWith(FILE_SUFFIX)
+            }?.map {
+                it.name
+            }?.toSet() ?: emptySet()
+            val savedIndex = readIndexFromFile()
+            val checkedIndex = checkIndexAgainstRealFiles(savedIndex, downloadedFileNames)
+            _downloadsIndex.value = checkedIndex
+        }
+    }
+
+    private fun checkIndexAgainstRealFiles(
+        index: DownloadsIndex,
+        existingDownloaded: Set<String>
+    ): DownloadsIndex {
+        val files = index.downloadedFiles
+        val missing = mutableSetOf<DownloadedFileInfo>()
+        for (fileInfo in files) {
+            if (fileInfo.filename !in existingDownloaded) {
+                missing.add(fileInfo)
+            }
+        }
+        val actualFiles = files - missing
+        return DownloadsIndex(actualFiles)
+
+    }
+
+    private fun readIndexFromFile(): DownloadsIndex {
+        return try {
+            val file = File(outputDir, INDEX_FILE)
+            val json = file.readText()
+            val index = DownloadsIndexSerializer.deserialize(json)
+            index ?: DownloadsIndex.blank()
+        } catch (e: Exception) {
+            DownloadsIndex.blank()
+        }
+    }
+
+    private fun writeIndexToFile(index: DownloadsIndex) {
+        try {
+            val file = File(outputDir, INDEX_FILE)
+            file.parentFile?.mkdirs()
+            val json = DownloadsIndexSerializer.serialize(index)
+            file.writeText(json)
+        } catch (e: Exception) {
+            Logs.d("downloader", "error while saving index to file: ${e.message}")
+        }
+    }
+
+    companion object {
+        private const val FILE_SUFFIX = "_2.obf.zip"
+        private const val DOWNLOAD_FILE_SUFFIX = ".part"
+        private const val INDEX_FILE = "downloads.index"
+    }
 }
 
 private class ActiveDownloadCancelledException : CancellationException("Cancelled by request")

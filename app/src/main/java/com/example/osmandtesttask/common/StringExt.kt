@@ -6,6 +6,7 @@ fun String.capitalizeFirstChar(languageCode: String): String {
     val locale = Locale.forLanguageTag(languageCode)
     return capitalizeFirstChar(locale)
 }
+
 fun String.capitalizeFirstChar(locale: Locale): String {
     return replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 }

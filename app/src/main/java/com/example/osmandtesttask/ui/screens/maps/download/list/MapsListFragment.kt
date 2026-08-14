@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,8 +14,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.example.osmandtesttask.R
 import com.example.osmandtesttask.domain.models.Region
-import com.example.osmandtesttask.ui.common.components.MarginDividerItemDecoration
-import com.example.osmandtesttask.ui.common.extensions.dpToPx
 import com.example.osmandtesttask.ui.common.extensions.getCurrentLocale
 import com.example.osmandtesttask.ui.common.navigation.NavDestination
 import com.example.osmandtesttask.ui.common.navigation.NavigationViewModel
@@ -27,16 +24,16 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
-class MapsListFragment: Fragment() {
+class MapsListFragment : Fragment() {
     val vm by viewModel<MapsListViewModel>()
     val navigationVm by activityViewModel<NavigationViewModel>()
 
-    private lateinit var regionsRecycler: RecyclerView
-
-    private val mapsListAdapter = MapsListAdapter(
-        onRegionItemTapped = ::onRegionItemTapped,
-        onDownloadTapped = ::onDownloadTapped,
-        onCancelDownloadTapped = ::onCancelDownloadTapped
+    private val mapsListController = MapsListController(
+        MapsListAdapter(
+            onRegionItemTapped = ::onRegionItemTapped,
+            onDownloadTapped = ::onDownloadTapped,
+            onCancelDownloadTapped = ::onCancelDownloadTapped
+        )
     )
 
     private var permissionContinuation: Continuation<Boolean>? = null
@@ -99,11 +96,16 @@ class MapsListFragment: Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.uiState.collect { state ->
                     when (state) {
-                        UIState.Loading -> {}
+                        UIState.Loading -> {
+                            // todo: "loading regions list" indication
+                        }
                         is UIState.Success -> {
-                            val regions = state.regions
-                            val downloaderState = state.downloaderState
-                            mapsListAdapter.setItems(vm.indexPath, regions, downloaderState)
+                            mapsListController.setItems(
+                                vm.indexPath,
+                                state.regions,
+                                state.downloaderState,
+                                state.downloadedFiles
+                            )
                         }
                     }
                 }
@@ -112,18 +114,8 @@ class MapsListFragment: Fragment() {
     }
 
     private fun setupRecycler(view: View) {
-        val context = view.context
-        regionsRecycler = view.findViewById(R.id.regions_recycler)
-        val divider = MarginDividerItemDecoration(
-            1.dpToPx(context),
-            ContextCompat.getColor( context, R.color.listDividerColor),
-            64.dpToPx(context), 0,
-            alsoOmitItemIf = { adapter, position ->
-                (adapter as? MapsListAdapter)?.shouldSkipDividerForItemAt(position) ?: false
-            }
-        )
-        regionsRecycler.addItemDecoration(divider)
-        regionsRecycler.adapter = mapsListAdapter
+        val regionsRecycler: RecyclerView = view.findViewById(R.id.regions_recycler)
+        mapsListController.setupRecycler(regionsRecycler)
     }
 
     private fun onDownloadTapped(indexPath: List<Int>, item: Region) {
@@ -150,7 +142,7 @@ class MapsListFragment: Fragment() {
 
     companion object {
         private const val ARG_INDEX_PATH = "index_path"
-        fun createForPath(indexPath: List<Int>) : MapsListFragment {
+        fun createForPath(indexPath: List<Int>): MapsListFragment {
             val args = Bundle().apply {
                 putIntArray(ARG_INDEX_PATH, indexPath.toIntArray())
             }

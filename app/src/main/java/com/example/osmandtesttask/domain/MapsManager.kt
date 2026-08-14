@@ -23,6 +23,7 @@ class MapsManager(
 
     val downloadsState = mapsDownloader.throttledState
     val downloadErrors = mapsDownloader.errors
+    val downloadsIndex = mapsDownloader.downloadsIndex
 
     fun getRegions(): RegionsList?{
         return regions

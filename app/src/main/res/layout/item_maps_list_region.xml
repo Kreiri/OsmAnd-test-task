@@ -5,31 +5,48 @@
     style="@style/ListItem.MapRegion">
 
     <ImageView
+        android:layout_marginStart="16dp"
         android:id="@+id/icon_view"
         tools:src="@drawable/ic_map"
         android:foregroundTint="@color/listItemIconTintColor"
         android:layout_width="24dp"
         android:layout_height="24dp"/>
-    <TextView
+    <LinearLayout
+        android:layout_gravity="center_vertical"
         android:layout_marginHorizontal="16dp"
-        android:id="@+id/region_name"
-        style="@style/ListItem.MapRegion.Text"
+        android:orientation="vertical"
         android:layout_width="0dp"
         android:layout_weight="1"
-        android:layout_height="wrap_content"
-        tools:text="Europe" />
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/region_name"
+            style="@style/ListItem.MapRegion.Text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Europe" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:indeterminate="false"
+            app:trackInnerCornerRadius="0dp"
+            app:trackCornerRadius="0dp"
+            app:indicatorTrackGapSize="0dp"
+            android:max="100"
+            tools:progress="30" />
+
+    </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/download_button"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:insetLeft="0dp"
-        android:insetTop="0dp"
-        android:insetRight="0dp"
-        android:insetBottom="0dp"
-        app:icon="@drawable/ic_action_import"
-        app:iconGravity="textStart"
-        app:iconPadding="0dp"
-        app:iconTint="@color/listItemIconTintColor" />
+        style="@style/MapListItemButton"
+        app:icon="@drawable/ic_action_import"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/cancelButton"
+        style="@style/MapListItemButton"
+        app:icon="@drawable/ic_action_remove_dark"/>
 </LinearLayout>

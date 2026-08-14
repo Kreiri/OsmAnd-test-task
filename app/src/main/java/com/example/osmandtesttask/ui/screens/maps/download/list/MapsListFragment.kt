@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -34,7 +35,8 @@ class MapsListFragment: Fragment() {
 
     private val mapsListAdapter = MapsListAdapter(
         onRegionItemTapped = ::onRegionItemTapped,
-        onDownloadTapped = ::onDownloadTapped
+        onDownloadTapped = ::onDownloadTapped,
+        onCancelDownloadTapped = ::onCancelDownloadTapped
     )
 
     private var permissionContinuation: Continuation<Boolean>? = null
@@ -76,6 +78,23 @@ class MapsListFragment: Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupRecycler(view)
 
+        subscribeToDownloadErrors()
+        subscribeToUiState()
+    }
+
+    private fun subscribeToDownloadErrors() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.downloadErrors.collect { error ->
+                    val downloadName = error.download.displayName
+                    val message = getString(R.string.error_msg_map_download_failed, downloadName)
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun subscribeToUiState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.uiState.collect { state ->
@@ -83,7 +102,8 @@ class MapsListFragment: Fragment() {
                         UIState.Loading -> {}
                         is UIState.Success -> {
                             val regions = state.regions
-                            mapsListAdapter.setItems(vm.indexPath, regions)
+                            val downloaderState = state.downloaderState
+                            mapsListAdapter.setItems(vm.indexPath, regions, downloaderState)
                         }
                     }
                 }
@@ -113,6 +133,13 @@ class MapsListFragment: Fragment() {
             }
         }
     }
+
+
+    private fun onCancelDownloadTapped(indexPath: List<Int>, item: Region) {
+        vm.cancelDownload(item)
+    }
+
+
     private fun onRegionItemTapped(indexPath: List<Int>, item: Region) {
         if (item.regions.isEmpty()) return
         val context = context ?: return

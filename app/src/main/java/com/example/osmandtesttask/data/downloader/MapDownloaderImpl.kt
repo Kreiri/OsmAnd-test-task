@@ -1,10 +1,12 @@
 package com.example.osmandtesttask.data.downloader
 
+import android.os.SystemClock
 import com.example.osmandtesttask.common.Logs
 import com.example.osmandtesttask.common.capitalizeFirstChar
 import com.example.osmandtesttask.data.api.MapDownloadApiService
-import com.example.osmandtesttask.domain.downloader.DownloadTask
+import com.example.osmandtesttask.domain.downloader.DownloadError
 import com.example.osmandtesttask.domain.downloader.DownloadState
+import com.example.osmandtesttask.domain.downloader.DownloadTask
 import com.example.osmandtesttask.domain.downloader.DownloaderState
 import com.example.osmandtesttask.domain.downloader.IMapDownloader
 import com.example.osmandtesttask.domain.models.Region
@@ -13,15 +15,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
+import retrofit2.HttpException
 import java.io.File
 import java.util.Collections
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.cancellation.CancellationException
 
 class MapDownloaderImpl(
@@ -32,65 +42,114 @@ class MapDownloaderImpl(
     private val onEnqueue: () -> Unit
 ) : IMapDownloader {
 
-    private val queue = Channel<DownloadTask>(Channel.UNLIMITED)
-    private var currentJob: Job? = null
+    private var downloadJob: Job? = null
+
+    private var queueChannel = createChannel()
+    private var queueJob: Job? = null
 
     private val enqueuedList = Collections.synchronizedList(mutableListOf<DownloadTask>())
 
     private val _state = MutableStateFlow<DownloaderState>(DownloaderState.Empty)
     override val state: StateFlow<DownloaderState> = _state.asStateFlow()
 
+    private val lastThrottleFlowEmitTime = AtomicLong(0L)
+    private val throttleInterval = 500L
+    override val throttledState = _state.filter { state ->
+        if (state == DownloaderState.Empty) {
+            true
+        } else {
+            val time = SystemClock.elapsedRealtime()
+            val accept = time - lastThrottleFlowEmitTime.get() >= throttleInterval
+            if (accept) lastThrottleFlowEmitTime.set(time)
+            accept
+        }
+    }.stateIn(
+        scope = externalScope,
+        started = SharingStarted.Eagerly,
+        initialValue = _state.value
+    )
+
+    private val _errors = MutableSharedFlow<DownloadError>()
+    override val errors = _errors.asSharedFlow()
+
     init {
-        externalScope.launch {
-            for (downloadName in queue) {
-                enqueuedList.remove(downloadName)
-                startDownloadJob(downloadName)
+        launchQueue()
+    }
+
+    private fun createChannel() = Channel<DownloadTask>(Channel.UNLIMITED)
+
+    private fun launchQueue() {
+
+        Logs.d("downloader", "launch queue")
+        queueChannel = createChannel()
+        queueJob = externalScope.launch {
+            try {
+                for (downloadTask in queueChannel) {
+                    Logs.d("Downloader", "getting ${downloadTask.downloadName} from queue")
+                    enqueuedList.remove(downloadTask)
+                    startDownloadJob(downloadTask)
+                }
+            } catch (e: CancellationException) {
+                Logs.d("Downloader", "queue job : CancellationException")
             }
         }
     }
 
+    private fun cancelQueue() {
+        Logs.d("downloader", "cancel queue")
+        queueChannel.close()
+        queueJob?.cancel()
+        queueJob = null
+    }
+
     private suspend fun startDownloadJob(download: DownloadTask) {
+        Logs.d("Downloader", "starting job for ${download.downloadName}")
         updateState(activeDownload = download)
         try {
             withContext(Dispatchers.IO) {
-                currentJob = currentCoroutineContext()[Job]
+                downloadJob = currentCoroutineContext()[Job]
                 processDownload(download)
             }
         } catch (e: Exception) {
-            Logs.d("download error: ${e.message}")
+            Logs.d("Downloader", "download error: ${e.message}")
             if (e is ActiveDownloadCancelledException) {
                 // todo: custom handling of user-initiated cancel?
+            } else if (e is CancellationException) {
+                throw e
+            } else {
+                val error = e.toDownloadError(download)
+                _errors.tryEmit(error)
             }
-            if (e is CancellationException) throw e
         } finally {
-            currentJob = null
+            downloadJob = null
             updateState(activeDownload = null)
         }
     }
 
     private suspend fun processDownload(download: DownloadTask) {
+        Logs.d("Downloader", "launching download ${download.downloadName}")
         withContext(Dispatchers.IO) {
             val downloadFilename = composeDownloadFileName(download.downloadName)
             val destination = File(outputDir, downloadFilename)
             if (!validateFileLocation(destination, outputDir)) {
-                // todo: implement individual download failure notification
-                return@withContext
+                throw SecurityException("Path traversal check failed: $downloadFilename")
             }
 
             val response = service.downloadMap(downloadFilename)
             if (response.isSuccessful) {
-                response.body()?.let { body ->
-                    saveFileWithProgress(download, body, destination)
-                }
+
+                Logs.d("Downloader", "received success response for ${download.downloadName}")
+                val body = response.body() ?: throw HttpException(response)
+                saveFileWithProgress(download, body, destination)
             } else {
-                // todo: implement individual download failure notification
+                throw HttpException(response)
             }
         }
     }
 
     private fun validateFileLocation(file: File, expectedDir: File): Boolean {
         val canonicalFile = file.canonicalPath
-        val canonicalFolder = expectedDir.canonicalPath
+        val canonicalFolder = File(expectedDir.canonicalPath + File.separator).canonicalPath
         return canonicalFile.startsWith(canonicalFolder)
     }
 
@@ -125,24 +184,35 @@ class MapDownloaderImpl(
         val locale = localeProvider.invoke()
         val displayName = region.getLocalizedName(locale.language)
         val download = DownloadTask(displayName, region.downloadName)
-        enqueuedList.add(download)
-        queue.trySend(download)
-        updateState(activeDownload = getActiveDownload())
-        onEnqueue.invoke()
+        if (enqueuedList.contains(download)) return
+
+        val queue = queueChannel ?: return
+
+        val sent = queue.trySend(download)
+        if (sent.isSuccess) {
+            Logs.d("Downloader", "enqueued ${download.downloadName}")
+            enqueuedList.add(download)
+            updateState(activeDownload = getActiveDownload())
+            onEnqueue.invoke()
+        } else {
+            Logs.d("Downloader", "enqueuing ${download.downloadName} failed")
+        }
     }
 
     override fun cancelDownload(region: Region) {
         val downloadName = region.downloadName
         if (getActiveDownload()?.downloadName == downloadName) {
-            currentJob?.cancel(ActiveDownloadCancelledException())
+            downloadJob?.cancel(ActiveDownloadCancelledException())
+            downloadJob = null
         }
     }
 
     override fun cancelAll() {
-        queue.close()
-        currentJob?.cancel()
+        cancelQueue()
+        downloadJob?.cancel()
         enqueuedList.clear()
         _state.value = DownloaderState.Empty
+        launchQueue()
     }
 
     private fun composeDownloadFileName(downloadName: String): String =

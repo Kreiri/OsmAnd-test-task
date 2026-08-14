@@ -8,4 +8,7 @@
     <color name="backgroundColor">#F0F0F0</color>
     <color name="appBarColor">#ff8800</color>
     <color name="appBarTextColor">#ffffff</color>
+
+    <color name="colorPrimary">#2175F3</color>
+    <color name="colorSecondaryContainer">#F0F0F0</color>
 </resources>

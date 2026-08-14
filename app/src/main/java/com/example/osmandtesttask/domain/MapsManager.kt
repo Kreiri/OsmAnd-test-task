@@ -21,7 +21,8 @@ class MapsManager(
         return fetched
     }
 
-    val downloadsState = mapsDownloader.state
+    val downloadsState = mapsDownloader.throttledState
+    val downloadErrors = mapsDownloader.errors
 
     fun getRegions(): RegionsList?{
         return regions
@@ -29,5 +30,9 @@ class MapsManager(
 
     fun requestDownloadMap(region: Region) {
         mapsDownloader.enqueueDownload(region)
+    }
+
+    fun cancelDownload(region: Region) {
+        mapsDownloader.cancelDownload(region)
     }
 }

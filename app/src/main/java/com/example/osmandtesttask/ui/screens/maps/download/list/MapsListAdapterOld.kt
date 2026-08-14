@@ -1,12 +1,12 @@
 package com.example.osmandtesttask.ui.screens.maps.download.list
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.osmandtesttask.R
 import com.example.osmandtesttask.domain.downloader.DownloadState
@@ -14,21 +14,22 @@ import com.example.osmandtesttask.domain.downloader.DownloaderState
 import com.example.osmandtesttask.domain.models.Region
 import com.example.osmandtesttask.domain.models.RegionType
 import com.example.osmandtesttask.ui.common.extensions.getCurrentLocale
-import com.google.android.material.progressindicator.LinearProgressIndicator
 
-class MapsListAdapter(
+class MapsListAdapterOld(
     private val onRegionItemTapped: (itemPath: List<Int>, item: Region) -> Unit,
     private val onDownloadTapped: (itemPath: List<Int>, item: Region) -> Unit,
-    private val onCancelDownloadTapped: (itemPath: List<Int>, item: Region) -> Unit,
-) : ListAdapter<MapListItem, MapsListAdapter.ViewHolder>(MapListItemDiff) {
+) : RecyclerView.Adapter<MapsListAdapterOld.ViewHolder>() {
 
+    private var items = listOf<MapListItem>()
+
+    @SuppressLint("NotifyDataSetChanged")
     fun setItems(indexPath: List<Int>, regions: List<Region>, downloaderState: DownloaderState) {
-        val items = buildItems(indexPath, regions, downloaderState)
-        submitList(items)
+        items = buildItems(indexPath, regions, downloaderState)
+        notifyDataSetChanged()
     }
 
     fun shouldSkipDividerForItemAt(position: Int): Boolean {
-        val item = getItem(position)
+        val item = items[position]
         return (item !is MapListItem.RegionItem)
     }
 
@@ -39,6 +40,7 @@ class MapsListAdapter(
             if (region.type == RegionType.CONTINENT) {
                 list.add(MapListItem.ContinentHeader(region))
                 val continentItems = region.regions.mapIndexed { childIndex, child ->
+//                    MapListItem.RegionItem(child, regionPath + childIndex)
                     makeRegionItem(child, regionPath+childIndex, downloaderState)
                 }
                 list.addAll(continentItems)
@@ -69,7 +71,7 @@ class MapsListAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        val item = getItem(position)
+        val item = items[position]
         return when(item) {
             is MapListItem.ContinentFooter -> ViewType.ContinentFooter.ordinal
             is MapListItem.ContinentHeader -> ViewType.ContinentHeader.ordinal
@@ -101,37 +103,25 @@ class MapsListAdapter(
         }
     }
 
-    private fun bindViewHolder(
-        holder: ViewHolder,
-        position: Int,
-        payloads: List<Any?> = emptyList()
-    ) {
-        val actualPayloads: Set<PayloadFlags> = payloads.filterIsInstance<Payloads>().flatMap { it.flags }.toSet()
-        when(holder) {
-            is RegionItemViewHolder -> {
-                val item = getItem(position) as? MapListItem.RegionItem ?: return
-                holder.bind(item, actualPayloads, onRegionItemTapped, onDownloadTapped, onCancelDownloadTapped)
-            }
-            is ContinentHeaderViewHolder -> {
-                val item = getItem(position) as? MapListItem.ContinentHeader ?: return
-                holder.bind(item)
-            }
-        }
-    }
-
-    override fun onBindViewHolder(
-        holder: ViewHolder,
-        position: Int,
-        payloads: List<Any?>
-    ) {
-        bindViewHolder(holder, position, payloads)
-    }
-
     override fun onBindViewHolder(
         holder: ViewHolder,
         position: Int
     ) {
-       bindViewHolder(holder, position, emptyList())
+        when(holder) {
+            is RegionItemViewHolder -> {
+                val item = items[position] as? MapListItem.RegionItem ?: return
+                holder.bind(item, onRegionItemTapped, onDownloadTapped)
+            }
+            is ContinentHeaderViewHolder -> {
+                val item = items[position] as? MapListItem.ContinentHeader ?: return
+                holder.bind(item)
+            }
+        }
+
+    }
+
+    override fun getItemCount(): Int {
+        return items.size
     }
 
     private enum class ViewType {
@@ -151,60 +141,36 @@ class MapsListAdapter(
     class RegionItemViewHolder(view: View) : ViewHolder(view) {
         val regionName: TextView = view.findViewById(R.id.region_name)
         val downloadButton: Button = view.findViewById(R.id.download_button)
-        val cancelButton: Button = view.findViewById(R.id.cancelButton)
         val iconView : ImageView = view.findViewById(R.id.icon_view)
-        val progressBar : LinearProgressIndicator = view.findViewById(R.id.progressIndicator)
 
         fun bind(
             item: MapListItem.RegionItem,
-            payloads: Set<PayloadFlags>,
             onItemTapped: (path: List<Int>, region: Region) -> Unit,
-            onDownloadTapped: (path: List<Int>, region: Region) -> Unit,
-            onCancelDownloadTapped: (path: List<Int>, region: Region) -> Unit,
+            onDownloadTapped: (path: List<Int>, region: Region) -> Unit
         ) {
+            val context = itemView.context
+            val locale = context.getCurrentLocale()
             val region = item.region
+            val showDownloadButton = region.map
+            val icon = if(region.type == RegionType.MAP || region.map) {
+                R.drawable.ic_map
+            } else {
+                0
+            }
+            val showIconView = (icon != 0)
 
-            val shouldUpdateAll = payloads.isEmpty()
-            val progressChanged = shouldUpdateAll || payloads.contains(PayloadFlags.DOWNLOAD_PROGRESS)
-            val isDownloadingChanged = shouldUpdateAll || payloads.contains(PayloadFlags.IS_DOWNLOADING)
+            iconView.visibility = if (showIconView) View.VISIBLE else View.INVISIBLE
+            iconView.setImageResource(icon)
 
-            if (shouldUpdateAll) {
 
-                val context = itemView.context
-                val locale = context.getCurrentLocale()
-                regionName.text = region.getLocalizedName(locale.language)
-                itemView.setOnClickListener {
-                    onItemTapped(item.indexPath, region)
-                }
-
-                val icon = if(region.type == RegionType.MAP || region.map) {
-                    R.drawable.ic_map
-                } else {
-                    0
-                }
-                val showIconView = (icon != 0)
-
-                iconView.visibility = if (showIconView) View.VISIBLE else View.INVISIBLE
-                iconView.setImageResource(icon)
-
-                downloadButton.setOnClickListener {
-                    onDownloadTapped(item.indexPath, region)
-                }
-                cancelButton.setOnClickListener {
-                    onCancelDownloadTapped(item.indexPath, region)
-                }
+            downloadButton.visibility = if (showDownloadButton) View.VISIBLE else View.INVISIBLE
+            downloadButton.setOnClickListener {
+                onDownloadTapped(item.indexPath, region)
             }
 
-            if (shouldUpdateAll || isDownloadingChanged) {
-                val isDownloadable = region.map
-                val isDownloading = item.isDownloading
-                downloadButton.visibility = if (isDownloadable && !isDownloading) View.VISIBLE else View.GONE
-                cancelButton.visibility = if (isDownloadable && isDownloading) View.VISIBLE else View.GONE
-                progressBar.visibility = if (isDownloading) View.VISIBLE else View.GONE
-            }
-
-            if (shouldUpdateAll || progressChanged) {
-                progressBar.progress = (item.downloadProgress * 100).toInt()
+            regionName.text = region.getLocalizedName(locale.language)
+            itemView.setOnClickListener {
+                onItemTapped(item.indexPath, region)
             }
         }
     }

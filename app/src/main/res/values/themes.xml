@@ -1,11 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.OsmandTestTask" parent="Theme.Material3.Light.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
         <item name="android:colorBackground">@color/backgroundColor</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryContainer">@color/appBarColor</item>
         <item name="colorOnPrimaryContainer">@color/appBarTextColor</item>
+        <item name="colorSecondaryContainer">@color/colorSecondaryContainer</item>
+
     </style>
 
     <style name="Theme.OsmandTestTask" parent="Base.Theme.OsmandTestTask" />

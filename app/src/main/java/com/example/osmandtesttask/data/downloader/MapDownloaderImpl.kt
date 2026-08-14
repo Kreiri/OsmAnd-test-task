@@ -4,13 +4,14 @@ import android.os.SystemClock
 import com.example.osmandtesttask.common.Logs
 import com.example.osmandtesttask.common.capitalizeFirstChar
 import com.example.osmandtesttask.data.api.MapDownloadApiService
-import com.example.osmandtesttask.domain.downloader.DownloadError
+import com.example.osmandtesttask.domain.LocaleProvider
 import com.example.osmandtesttask.domain.downloader.DownloadState
 import com.example.osmandtesttask.domain.downloader.DownloadTask
 import com.example.osmandtesttask.domain.downloader.DownloadedFileInfo
 import com.example.osmandtesttask.domain.downloader.DownloaderState
 import com.example.osmandtesttask.domain.downloader.DownloadsIndex
 import com.example.osmandtesttask.domain.downloader.IMapDownloader
+import com.example.osmandtesttask.domain.downloader.MapDownloadError
 import com.example.osmandtesttask.domain.models.Region
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +40,7 @@ class MapDownloaderImpl(
     private val service: MapDownloadApiService,
     private val outputDir: File,
     private val externalScope: CoroutineScope,
-    private val localeProvider: () -> Locale,
+    private val localeProvider: LocaleProvider,
     private val onEnqueue: () -> Unit
 ) : IMapDownloader {
 
@@ -73,7 +74,7 @@ class MapDownloaderImpl(
         initialValue = _state.value
     )
 
-    private val _errors = MutableSharedFlow<DownloadError>()
+    private val _errors = MutableSharedFlow<MapDownloadError>()
     override val errors = _errors.asSharedFlow()
 
     init {

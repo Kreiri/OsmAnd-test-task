@@ -1,5 +1,8 @@
 package com.example.osmandtesttask.domain.downloader
 
+import com.example.osmandtesttask.domain.errors.AppError
+import com.example.osmandtesttask.domain.errors.NetworkError
+import com.example.osmandtesttask.domain.errors.StorageError
 import com.example.osmandtesttask.domain.models.Region
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +17,7 @@ interface IMapDownloader {
 
     val downloadsIndex: StateFlow<DownloadsIndex>
 
-    val errors: Flow<DownloadError> }
+    val errors: Flow<MapDownloadError> }
 
 sealed interface DownloaderState {
     object Empty : DownloaderState
@@ -45,12 +48,12 @@ sealed interface DownloadState {
     }
 }
 
-sealed interface DownloadError {
+sealed interface MapDownloadError: AppError {
     val download: DownloadTask
-    data class NoInternet(override val download: DownloadTask): DownloadError
-    data class ServerError(override val download: DownloadTask): DownloadError
-    data class InsufficientStorage(override val download: DownloadTask): DownloadError
-    data class Unknown(override val download: DownloadTask, val cause: Throwable): DownloadError
+    data class NoInternet(override val download: DownloadTask): MapDownloadError, NetworkError
+    data class ServerError(override val download: DownloadTask, val code: Int): MapDownloadError, NetworkError
+    data class InsufficientStorage(override val download: DownloadTask): MapDownloadError, StorageError
+    data class Unknown(override val download: DownloadTask, val cause: Throwable): MapDownloadError
 }
 
 data class DownloadsIndex(val downloadedFiles: Set<DownloadedFileInfo>) {

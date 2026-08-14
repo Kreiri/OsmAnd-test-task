@@ -2,7 +2,8 @@ package com.example.osmandtesttask.di
 
 import com.example.osmandtesttask.BuildConfig
 import com.example.osmandtesttask.data.api.MapDownloadApiService
-import com.example.osmandtesttask.data.repository.DummyRepository
+import com.example.osmandtesttask.data.repository.LocalRegionsRepository
+import com.example.osmandtesttask.data.util.retrofit.RemoteRegionsListConverter
 import com.example.osmandtesttask.domain.repository.IRegionRepository
 import okhttp3.OkHttpClient
 import org.koin.core.qualifier.named
@@ -21,6 +22,7 @@ val mapDownloadsModule = module {
         Retrofit.Builder()
             .client(get(named(OkHttpQualifier.MAPS_DOWNLOAD)))
             .baseUrl(get<String>(named(BaseUrlQualifier.MAPS_DOWNLOAD)))
+            .addConverterFactory(RemoteRegionsListConverter.Factory.create())
             .build()
     }
     single<MapDownloadApiService> {
@@ -36,6 +38,6 @@ val networkModule = module {
 val dataModule = module {
     includes(networkModule)
     single<IRegionRepository> {
-        DummyRepository()
+        LocalRegionsRepository(get(), "regions.xml")
     }
 }

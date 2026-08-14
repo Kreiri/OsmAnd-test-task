@@ -3,7 +3,10 @@ package com.example.osmandtesttask.ui.screens.maps.download.overview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.osmandtesttask.domain.MapsManager
+import com.example.osmandtesttask.domain.errors.AppError
 import com.example.osmandtesttask.domain.models.RegionsList
+import com.example.osmandtesttask.domain.models.onFailure
+import com.example.osmandtesttask.domain.models.onSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +15,7 @@ import kotlinx.coroutines.launch
 sealed interface UIState {
     object Loading: UIState
     data class Success(val regionsList: RegionsList): UIState
-    data class Failure(val e: Throwable): UIState
+    data class Failure(val error: AppError): UIState
 }
 class MapsOverviewViewModel(
     private val mapsManager: MapsManager

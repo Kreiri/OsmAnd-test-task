@@ -1,5 +1,11 @@
 package com.example.osmandtesttask.domain.errors
 
-sealed class AppError(cause: Exception): Exception(cause) {
-    class General(cause: Exception): AppError(cause)
+
+interface AppError {
+    class Unknown(val cause: Throwable): AppError
+    object NoInternet: AppError, NetworkError
+    class ServerError(val code: Int): AppError, NetworkError
+    object InsufficientStorage: AppError, StorageError
 }
+interface NetworkError : AppError
+interface StorageError : AppError

@@ -1,8 +1,11 @@
 package com.example.osmandtesttask.domain
 
 import com.example.osmandtesttask.domain.downloader.IMapDownloader
+import com.example.osmandtesttask.domain.models.AppResult
 import com.example.osmandtesttask.domain.models.Region
 import com.example.osmandtesttask.domain.models.RegionsList
+import com.example.osmandtesttask.domain.models.onFailure
+import com.example.osmandtesttask.domain.models.onSuccess
 import com.example.osmandtesttask.domain.repository.IRegionRepository
 
 class MapsManager(
@@ -11,7 +14,7 @@ class MapsManager(
 ) {
     private var regions: RegionsList? = null
 
-    suspend fun loadRegions(): Result<RegionsList> {
+    suspend fun loadRegions(): AppResult<RegionsList> {
         val fetched = regionsRepo.getRegionsList()
         fetched.onFailure {
             regions = null
@@ -20,7 +23,6 @@ class MapsManager(
         }
         return fetched
     }
-
     val downloadsState = mapsDownloader.throttledState
     val downloadErrors = mapsDownloader.errors
     val downloadsIndex = mapsDownloader.downloadsIndex

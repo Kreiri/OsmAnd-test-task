@@ -1,6 +1,8 @@
 package com.example.osmandtesttask.di
 
 import com.example.osmandtesttask.data.downloader.MapDownloaderImpl
+import com.example.osmandtesttask.domain.AssetProvider
+import com.example.osmandtesttask.domain.LocaleProvider
 import com.example.osmandtesttask.domain.downloader.IMapDownloader
 import com.example.osmandtesttask.ui.common.extensions.getCurrentLocale
 import com.example.osmandtesttask.ui.common.navigation.NavigationViewModel
@@ -16,7 +18,6 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.plugin.module.dsl.viewModel
 import java.io.File
-import java.util.Locale
 
 val appModule = module {
     viewModel<NavigationViewModel>()
@@ -31,8 +32,15 @@ val appModule = module {
 
     single<NotificationUtil> { NotificationUtil(androidContext()) }
 
-    single<() -> Locale>(named(ProviderQualifier.LOCALE)) {
+    single<LocaleProvider>(named(ProviderQualifier.LOCALE)) {
         { androidContext().getCurrentLocale() }
+    }
+
+    single<AssetProvider> {
+        { fileName ->
+            val context = androidContext()
+            context.assets.open(fileName)
+        }
     }
 
     single<IMapDownloader> {

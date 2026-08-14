@@ -60,14 +60,21 @@ class MapDownloaderImpl(
     private val lastThrottleFlowEmitTime = AtomicLong(0L)
     private val throttleInterval = 500L
     override val throttledState = _state.filter { state ->
-        if (state == DownloaderState.Empty) {
-            true
-        } else {
-            val time = SystemClock.elapsedRealtime()
-            val accept = time - lastThrottleFlowEmitTime.get() >= throttleInterval
-            if (accept) lastThrottleFlowEmitTime.set(time)
-            accept
+        val time = SystemClock.elapsedRealtime()
+        val accept = when (state) {
+            DownloaderState.Empty -> {
+                true
+            }
+            is DownloaderState.Processing if state.downloadState == DownloadState.Finished -> {
+                true
+            }
+
+            else -> {
+                time - lastThrottleFlowEmitTime.get() >= throttleInterval
+            }
         }
+        if (accept) lastThrottleFlowEmitTime.set(time)
+        accept
     }.stateIn(
         scope = externalScope,
         started = SharingStarted.Eagerly,

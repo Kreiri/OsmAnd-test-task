@@ -29,12 +29,12 @@ fun ResponseBody.toFileWithProgress(destination: File) = flow<DownloadState> {
                     outputStream.write(buffer, 0, bufferBytesRead)
                     bytesRead += bufferBytesRead
 
-                    emit(DownloadState.Progress(bytesRead, totalBytes))
+                    if (bytesRead ==totalBytes) emit(DownloadState.Finished)
+                    else emit(DownloadState.Progress(bytesRead, totalBytes))
                 }
                 outputStream.flush()
             }
         }
-        emit(DownloadState.Finished)
     } catch (e: Throwable) {
         if (destination.exists()) {
             destination.delete()

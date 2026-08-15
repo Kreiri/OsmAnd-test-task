@@ -6,10 +6,14 @@ import com.example.osmandtesttask.domain.MapsManager
 import com.example.osmandtesttask.domain.downloader.DownloadedFileInfo
 import com.example.osmandtesttask.domain.downloader.DownloaderState
 import com.example.osmandtesttask.domain.models.Region
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 
 
@@ -33,7 +37,11 @@ class MapsListViewModel(
     val _uiState = MutableStateFlow<UIState>(UIState.Loading)
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
-    val downloadErrors = mapsManager.downloadErrors
+    val downloadErrors = mapsManager.downloadErrors.shareIn(
+        viewModelScope,
+        started = SharingStarted.Eagerly,
+        replay = 0,
+    ).buffer(capacity = Channel.BUFFERED)
 
     private val downloadsIndex = mapsManager.downloadsIndex
 

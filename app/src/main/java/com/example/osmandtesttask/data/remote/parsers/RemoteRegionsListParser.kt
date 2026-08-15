@@ -32,7 +32,7 @@ class RemoteRegionsListParser : BaseXmlParser() {
     }
 }
 
-class MapListConfigBuilder(override val contextTagName: String): TagContext {
+class MapListConfigBuilder(override val contextTagName: String) : TagContext {
     val regions = mutableListOf<RemoteRegion>()
     private var mapConfig: RemoteRegionsList? = null
     override val data: RemoteRegionsList
@@ -46,7 +46,7 @@ class MapListConfigBuilder(override val contextTagName: String): TagContext {
     }
 
     override fun createChildContext(tagName: String): TagContext? {
-        return when(tagName) {
+        return when (tagName) {
             "region" -> RemoteRegionBuilder(tagName)
             else -> null
         }
@@ -59,6 +59,7 @@ class MapListConfigBuilder(override val contextTagName: String): TagContext {
         }
     }
 }
+
 class RemoteRegionBuilder(override val contextTagName: String) : TagContext {
     var name: String = ""
     var translate: String? = null
@@ -80,24 +81,24 @@ class RemoteRegionBuilder(override val contextTagName: String) : TagContext {
     }
 
     override fun createChildContext(tagName: String): TagContext? {
-        return when(tagName) {
+        return when (tagName) {
             "region" -> RemoteRegionBuilder(tagName)
             else -> null
         }
     }
 
     override fun onEndTag() {
-       this.region = RemoteRegion(
-           name = name,
-           translate = translate,
-           downloadSuffix = downloadSuffix,
-           innerDownloadSuffix = innerDownloadSuffix,
-           downloadPrefix = downloadPrefix,
-           innerDownloadPrefix = innerDownloadPrefix,
-           type = type,
-           map = map,
-           regions = children.toList()
-       )
+        this.region = RemoteRegion(
+            name = name,
+            translate = translate,
+            downloadSuffix = downloadSuffix,
+            innerDownloadSuffix = innerDownloadSuffix,
+            downloadPrefix = downloadPrefix,
+            innerDownloadPrefix = innerDownloadPrefix,
+            type = type,
+            map = map,
+            regions = children.toList()
+        )
     }
 
     override fun onChildContextCompleted(child: TagContext) {

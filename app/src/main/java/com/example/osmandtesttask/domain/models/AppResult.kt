@@ -23,23 +23,25 @@ private constructor(val value: Any?) {
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <T> AppResult<T>.errorOrNull(): AppError? = if (isSuccess) null else (value as AppResult.Failure).error
+fun <T> AppResult<T>.errorOrNull(): AppError? =
+    if (isSuccess) null else (value as AppResult.Failure).error
 
 @Suppress("UNCHECKED_CAST")
-fun <T> AppResult<T>.getOrNull(): T?  = if (isSuccess) value as T else null
+fun <T> AppResult<T>.getOrNull(): T? = if (isSuccess) value as T else null
 
 @Suppress("UNCHECKED_CAST")
 fun <T> AppResult<T>.getOrThrow(): T =
     if (isSuccess) value as T
     else throw IllegalStateException("Expected Success but got Failure: cause ${this.errorOrNull()}")
 
-fun <T>AppResult<T>.onFailure(block: (AppError) -> Unit): AppResult<T> {
+fun <T> AppResult<T>.onFailure(block: (AppError) -> Unit): AppResult<T> {
     if (isFailure) {
         errorOrNull()?.let { block.invoke(it) }
     }
     return this
 }
-fun <T>AppResult<T>.onSuccess(block: (T) -> Unit): AppResult<T> {
+
+fun <T> AppResult<T>.onSuccess(block: (T) -> Unit): AppResult<T> {
     if (isSuccess) {
         getOrNull()?.let { block.invoke(it) }
     }

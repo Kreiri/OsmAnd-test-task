@@ -69,9 +69,11 @@ class MapsOverviewFragment : Fragment() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
+
             RegionsListState.Loading -> {
 
             }
+
             is RegionsListState.Success -> {
                 val fragment = MapsListFragment.createForTopLevel()
                 childFragmentManager.beginTransaction().replace(

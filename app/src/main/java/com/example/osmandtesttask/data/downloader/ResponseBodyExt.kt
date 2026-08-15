@@ -29,7 +29,7 @@ fun ResponseBody.toFileWithProgress(destination: File) = flow<DownloadState> {
                     outputStream.write(buffer, 0, bufferBytesRead)
                     bytesRead += bufferBytesRead
 
-                    if (bytesRead ==totalBytes) emit(DownloadState.Finished)
+                    if (bytesRead == totalBytes) emit(DownloadState.Finished)
                     else emit(DownloadState.Progress(bytesRead, totalBytes))
                 }
                 outputStream.flush()

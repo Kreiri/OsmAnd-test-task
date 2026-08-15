@@ -10,8 +10,8 @@ import com.example.osmandtesttask.domain.downloader.DownloadTask
 import com.example.osmandtesttask.domain.downloader.DownloadedFileInfo
 import com.example.osmandtesttask.domain.downloader.DownloaderState
 import com.example.osmandtesttask.domain.downloader.DownloadsIndex
-import com.example.osmandtesttask.domain.downloader.MapDownloader
 import com.example.osmandtesttask.domain.downloader.MapDownloadError
+import com.example.osmandtesttask.domain.downloader.MapDownloader
 import com.example.osmandtesttask.domain.models.Region
 import com.example.osmandtesttask.domain.storage.StorageManager
 import kotlinx.coroutines.CoroutineScope
@@ -67,6 +67,7 @@ class MapDownloaderImpl(
             DownloaderState.Empty -> {
                 true
             }
+
             is DownloaderState.Processing if state.downloadState == DownloadState.Finished -> {
                 true
             }
@@ -133,7 +134,7 @@ class MapDownloaderImpl(
                 throw e
             } else {
                 val error = e.toDownloadError(download)
-                _errors.tryEmit(error)
+                _errors.emit(error)
             }
         } finally {
             downloadJob = null

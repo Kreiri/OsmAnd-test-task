@@ -37,7 +37,8 @@ class RemoteRegionsList(
                 locals.subList(locals.size - childCount, locals.size).clear()
 
                 val parentRemote = remotesStack.lastOrNull()
-                val finalDomainNode = finishedRemote.region.toLocal(parentRemote?.affixes, compiledChildren)
+                val finalDomainNode =
+                    finishedRemote.region.toLocal(parentRemote?.affixes, compiledChildren)
                 locals.add(finalDomainNode)
             }
         }

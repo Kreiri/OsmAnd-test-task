@@ -16,7 +16,8 @@ data class FieldTranslations(val localized: Map<String, String>) {
 
 
 }
-data class RegionTranslations(val fieldTranslations:  Map<String, FieldTranslations> ) {
+
+data class RegionTranslations(val fieldTranslations: Map<String, FieldTranslations>) {
 
     fun getTranslation(field: String, locale: String): String? {
         return fieldTranslations[field]?.let {
@@ -26,7 +27,7 @@ data class RegionTranslations(val fieldTranslations:  Map<String, FieldTranslati
 
     companion object {
         fun parse(translate: String): RegionTranslations {
-            val translations =  parseTranslation(translate)
+            val translations = parseTranslation(translate)
             return RegionTranslations(translations)
         }
     }

@@ -12,6 +12,7 @@ object Logs {
             Log.d(tag, message)
         }
     }
+
     fun d(message: String) {
         d("", message)
     }

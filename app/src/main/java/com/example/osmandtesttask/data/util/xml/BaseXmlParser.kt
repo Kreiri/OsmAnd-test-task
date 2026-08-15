@@ -32,6 +32,7 @@ abstract class BaseXmlParser() {
                         stack.addLast(nextContext)
                     }
                 }
+
                 XmlPullParser.TEXT -> {
                     val text = parser.text
                     if (!text.isNullOrEmpty() && stack.isNotEmpty()) {
@@ -104,6 +105,10 @@ interface TagContext {
     fun onChildContextCompleted(child: TagContext)
 }
 
-fun TagContext.readStringAttribute(parser: XmlPullParser, attributeName: String, namespace: String? = null): String?  {
+fun TagContext.readStringAttribute(
+    parser: XmlPullParser,
+    attributeName: String,
+    namespace: String? = null
+): String? {
     return parser.getAttributeValue(namespace, attributeName)
 }

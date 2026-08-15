@@ -9,7 +9,7 @@ import java.net.ConnectException
 import java.net.UnknownHostException
 
 fun Throwable.toAppError(): AppError {
-    return when(this) {
+    return when (this) {
         is UnknownHostException, is ConnectException -> AppError.NoInternet
         is IOException -> {
             if (this.message?.contains("ENOSPC", ignoreCase = true) == true) {
@@ -18,12 +18,14 @@ fun Throwable.toAppError(): AppError {
                 AppError.Unknown(this)
             }
         }
+
         is HttpException -> AppError.ServerError(this.code())
         else -> AppError.Unknown(this)
     }
 }
+
 fun Throwable.toDownloadError(downloadTask: DownloadTask): MapDownloadError {
-    return when(val appError = this.toAppError()) {
+    return when (val appError = this.toAppError()) {
         is AppError.ServerError -> MapDownloadError.ServerError(downloadTask, appError.code)
         AppError.NoInternet -> MapDownloadError.NoInternet(downloadTask)
         AppError.InsufficientStorage -> MapDownloadError.InsufficientStorage(downloadTask)

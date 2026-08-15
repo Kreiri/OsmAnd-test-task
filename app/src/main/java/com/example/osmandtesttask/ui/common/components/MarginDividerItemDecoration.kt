@@ -12,7 +12,7 @@ class MarginDividerItemDecoration(
     private val marginStart: Int,
     private val marginEnd: Int,
     private val alsoOmitItemIf: ((adapter: RecyclerView.Adapter<*>, position: Int) -> Boolean)? = null
-) : RecyclerView.ItemDecoration(){
+) : RecyclerView.ItemDecoration() {
     private val paint = Paint().apply {
         color = dividerColor
         style = Paint.Style.FILL
@@ -20,12 +20,13 @@ class MarginDividerItemDecoration(
 
     private fun shouldOmit(adapter: RecyclerView.Adapter<*>?, position: Int): Boolean {
         if (adapter == null) return true
-        if (position ==  adapter.itemCount - 1) return true
+        if (position == adapter.itemCount - 1) return true
         if (alsoOmitItemIf != null) {
             if (alsoOmitItemIf.invoke(adapter, position)) return true
         }
         return false
     }
+
     override fun getItemOffsets(
         outRect: Rect,
         view: View,

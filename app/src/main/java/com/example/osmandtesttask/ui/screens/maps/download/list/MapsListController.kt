@@ -21,7 +21,8 @@ class MapsListController(
     private val adapter: MapsListAdapter,
 ) : KoinComponent {
     init {
-        adapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+        adapter.stateRestorationPolicy =
+            RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
     }
 
     private val localeProvider: LocaleProvider by inject(named(ProviderQualifiers.LOCALE))
@@ -31,7 +32,7 @@ class MapsListController(
         val context = recyclerView.context
         val divider = MarginDividerItemDecoration(
             1.dpToPx(context),
-            ContextCompat.getColor( context, R.color.dividerColor),
+            ContextCompat.getColor(context, R.color.dividerColor),
             64.dpToPx(context), 0,
             alsoOmitItemIf = { adapter, position ->
                 (adapter as? MapsListAdapter)?.shouldSkipDividerForItemAt(position) ?: false
@@ -63,7 +64,7 @@ class MapsListController(
             if (region.type == RegionType.CONTINENT) {
                 list.add(MapListItem.ContinentHeader(region))
                 val continentItems = region.regions.mapIndexed { childIndex, child ->
-                    makeRegionItem(child, regionPath+childIndex, downloaderState, downloadedFiles)
+                    makeRegionItem(child, regionPath + childIndex, downloaderState, downloadedFiles)
                 }.sortedWith { item, item1 ->
                     regionsComparator.compare(item.region, item1.region)
                 }
@@ -76,12 +77,13 @@ class MapsListController(
         }
         return list.toList()
     }
+
     private fun makeRegionItem(
         region: Region,
         indexPath: List<Int>,
         downloaderState: DownloaderState,
         downloadedFiles: Set<DownloadedFileInfo>
-    ) : MapListItem.RegionItem{
+    ): MapListItem.RegionItem {
         var isDownloading = false
         var progress = 0f
         if (downloaderState is DownloaderState.Processing) {

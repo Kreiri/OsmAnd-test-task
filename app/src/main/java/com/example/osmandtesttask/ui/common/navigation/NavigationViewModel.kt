@@ -7,9 +7,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 sealed interface NavDestination {
-    data class MapListRegion(val path: List<Int>, val title: String): NavDestination
-    object MapList: NavDestination
+    data class MapListRegion(val path: List<Int>, val title: String) : NavDestination
+    object MapList : NavDestination
 }
+
 class NavigationViewModel : ViewModel() {
 
     private val _navigateToScreen = MutableSharedFlow<NavDestination>()
@@ -24,7 +25,7 @@ class NavigationViewModel : ViewModel() {
         screenStack.add(0, destination)
     }
 
-    fun getTopDestination() : NavDestination {
+    fun getTopDestination(): NavDestination {
         return screenStack.last()
     }
 

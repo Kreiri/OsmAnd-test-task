@@ -20,6 +20,7 @@ object DownloadsIndexSerializer {
         }
     }
 }
+
 private fun JSONObject.toDownloadsIndex(): DownloadsIndex {
     val downloadedFilesJson = getJSONArray("downloadedFiles")
     val downloadedFiles = mutableSetOf<DownloadedFileInfo>()
@@ -29,6 +30,7 @@ private fun JSONObject.toDownloadsIndex(): DownloadsIndex {
     }
     return DownloadsIndex(downloadedFiles.toSet())
 }
+
 private fun JSONObject.toDownloadedFileInfo(): DownloadedFileInfo {
     val filename = getString("filename")
     val downloadName = getString("downloadName")

@@ -31,11 +31,13 @@ class RemoteRegion(
             downloadSuffix, innerDownloadSuffix, downloadPrefix, innerDownloadPrefix
         )
     }
+
     fun toLocal(parentAffixes: DownloadAffixes? = null, childRegions: List<Region>): Region {
-        val mergedAffixes = if (parentAffixes != null) mergeDownloadAffixes(parentAffixes) else getAffixes()
+        val mergedAffixes =
+            if (parentAffixes != null) mergeDownloadAffixes(parentAffixes) else getAffixes()
         val downloadName = composeDownloadName(mergedAffixes)
         val type = this.type?.parseAsType()
-        val isMap = if (type !=null && type != RegionType.MAP) {
+        val isMap = if (type != null && type != RegionType.MAP) {
             false
         } else {
             this.map ?: true
@@ -59,11 +61,20 @@ class RemoteRegion(
             ?: affixes.downloadPrefix ?: parentAffixes?.downloadPrefix
         val innerDownloadSuffix = affixes.innerDownloadSuffix
         val innerDownloadPrefix = affixes.innerDownloadPrefix
-        return DownloadAffixes(downloadSuffix, innerDownloadSuffix, downloadPrefix, innerDownloadPrefix)
+        return DownloadAffixes(
+            downloadSuffix,
+            innerDownloadSuffix,
+            downloadPrefix,
+            innerDownloadPrefix
+        )
     }
 
     fun composeDownloadName(mergedAffixes: DownloadAffixes): String {
-        return listOfNotNull(mergedAffixes.downloadPrefix, this.name, mergedAffixes.downloadSuffix).joinToString("_")
+        return listOfNotNull(
+            mergedAffixes.downloadPrefix,
+            this.name,
+            mergedAffixes.downloadSuffix
+        ).joinToString("_")
     }
 
 
@@ -79,7 +90,7 @@ data class DownloadAffixes(
 }
 
 private fun String.parseAsType(): RegionType {
-    return when(this) {
+    return when (this) {
         "continent" -> RegionType.CONTINENT
         "map" -> RegionType.MAP
         "srtm" -> RegionType.SRTM

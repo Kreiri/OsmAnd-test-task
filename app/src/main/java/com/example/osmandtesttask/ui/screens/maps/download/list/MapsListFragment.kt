@@ -99,6 +99,7 @@ class MapsListFragment : Fragment() {
                         UIState.Loading -> {
                             // todo: "loading regions list" indication
                         }
+
                         is UIState.Success -> {
                             mapsListController.setItems(
                                 vm.indexPath,

@@ -11,7 +11,7 @@ import com.example.osmandtesttask.domain.repository.RegionRepository
 class LocalRegionsRepository(
     private val assetProvider: AssetProvider,
     private val regionsFilePath: String
-): RegionRepository {
+) : RegionRepository {
     private val parser = RemoteRegionsListParser()
     private var data: RegionsList? = null
 

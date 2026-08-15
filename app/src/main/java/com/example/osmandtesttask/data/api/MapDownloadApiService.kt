@@ -11,7 +11,7 @@ import retrofit2.http.Url
 interface MapDownloadApiService {
     @Streaming
     @GET("/download.php?standard=yes")
-    suspend fun downloadMap(@Query("file") fileName: String) : Response<ResponseBody>
+    suspend fun downloadMap(@Query("file") fileName: String): Response<ResponseBody>
 
     @GET
     suspend fun downloadRegionsList(@Url url: String): RemoteRegionsList

@@ -10,8 +10,8 @@ import android.os.IBinder
 import androidx.core.content.ContextCompat
 import com.example.osmandtesttask.R
 import com.example.osmandtesttask.common.Logs
-import com.example.osmandtesttask.common.formatAsPercentage1
 import com.example.osmandtesttask.common.ScopeQualifier
+import com.example.osmandtesttask.common.formatAsPercentage1
 import com.example.osmandtesttask.domain.downloader.DownloadState
 import com.example.osmandtesttask.domain.downloader.DownloaderState
 import com.example.osmandtesttask.domain.downloader.MapDownloader

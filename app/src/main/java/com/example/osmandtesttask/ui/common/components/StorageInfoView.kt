@@ -7,12 +7,12 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.withStyledAttributes
 import com.example.osmandtesttask.R
 import com.example.osmandtesttask.common.asFractionOf
+import com.example.osmandtesttask.common.toReadableFileSize
 import com.example.osmandtesttask.ui.common.extensions.dpToPx
 import com.example.osmandtesttask.ui.common.extensions.resolvePaddings
-import androidx.core.content.withStyledAttributes
-import com.example.osmandtesttask.common.toReadableFileSize
 import com.google.android.material.progressindicator.LinearProgressIndicator
 
 class StorageInfoView @JvmOverloads constructor(
@@ -60,7 +60,8 @@ class StorageInfoView @JvmOverloads constructor(
 
     private fun applyTextAttrs(ta: TypedArray) {
         if (ta.hasValue(R.styleable.StorageInfoView_android_textSize)) {
-            val textSize = ta.getDimensionPixelSize(R.styleable.StorageInfoView_android_textSize, -1)
+            val textSize =
+                ta.getDimensionPixelSize(R.styleable.StorageInfoView_android_textSize, -1)
             if (textSize != -1) {
                 volumeLabel.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize.toFloat())
                 freeSpaceLabel.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize.toFloat())

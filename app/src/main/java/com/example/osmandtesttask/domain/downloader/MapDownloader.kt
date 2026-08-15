@@ -18,11 +18,12 @@ interface MapDownloader {
 
     val downloadsIndex: StateFlow<DownloadsIndex>
 
-    val errors: Flow<MapDownloadError> }
+    val errors: Flow<MapDownloadError>
+}
 
 sealed interface DownloaderState {
     object Empty : DownloaderState
-    data class Waiting(val enqueuedDownloads: List<DownloadTask>): DownloaderState
+    data class Waiting(val enqueuedDownloads: List<DownloadTask>) : DownloaderState
     data class Processing(
         val activeDownload: DownloadTask,
         val downloadState: DownloadState,
@@ -36,8 +37,8 @@ data class DownloadTask(
 
 sealed interface DownloadState {
     object Finished : DownloadState
-    object Cancelled: DownloadState
-    data class Error(val cause: Throwable): DownloadState
+    object Cancelled : DownloadState
+    data class Error(val cause: Throwable) : DownloadState
     data class Progress(val bytesRead: Long, val totalBytes: Long) : DownloadState {
         /**
          * progress as expressed with float values from 0 to 1. 1 is considered 100%
@@ -46,12 +47,17 @@ sealed interface DownloadState {
     }
 }
 
-sealed interface MapDownloadError: AppError {
+sealed interface MapDownloadError : AppError {
     val download: DownloadTask
-    data class NoInternet(override val download: DownloadTask): MapDownloadError, NetworkError
-    data class ServerError(override val download: DownloadTask, val code: Int): MapDownloadError, NetworkError
-    data class InsufficientStorage(override val download: DownloadTask): MapDownloadError, StorageError
-    data class Unknown(override val download: DownloadTask, val cause: Throwable): MapDownloadError
+
+    data class NoInternet(override val download: DownloadTask) : MapDownloadError, NetworkError
+    data class ServerError(override val download: DownloadTask, val code: Int) : MapDownloadError,
+        NetworkError
+
+    data class InsufficientStorage(override val download: DownloadTask) : MapDownloadError,
+        StorageError
+
+    data class Unknown(override val download: DownloadTask, val cause: Throwable) : MapDownloadError
 }
 
 data class DownloadsIndex(val downloadedFiles: Set<DownloadedFileInfo>) {
@@ -59,4 +65,5 @@ data class DownloadsIndex(val downloadedFiles: Set<DownloadedFileInfo>) {
         fun blank() = DownloadsIndex(emptySet())
     }
 }
+
 data class DownloadedFileInfo(val filename: String, val downloadName: String)

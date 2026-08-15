@@ -39,17 +39,17 @@ sealed interface DownloadState {
     object Finished : DownloadState
     object Cancelled : DownloadState
     data class Error(val cause: Throwable) : DownloadState
-    data class Progress(val bytesRead: Long, val totalBytes: Long) : DownloadState {
+    data class Progress(val totalBytes: Long, val downloadedBytes: Long) : DownloadState {
         /**
          * progress as expressed with float values from 0 to 1. 1 is considered 100%
          */
-        val progress: Float = bytesRead.asFractionOf(totalBytes)
+        val progress: Float = downloadedBytes.asFractionOf(totalBytes)
     }
 }
 
 sealed interface MapDownloadError : AppError {
     val download: DownloadTask
-
+    data class CancelledByUser(override val download: DownloadTask): MapDownloadError
     data class NoInternet(override val download: DownloadTask) : MapDownloadError, NetworkError
     data class ServerError(override val download: DownloadTask, val code: Int) : MapDownloadError,
         NetworkError

@@ -10,9 +10,8 @@ sealed interface MapListItem {
     data class RegionItem(
         val region: Region,
         val indexPath: List<Int>,
-        val isDownloading: Boolean,
+        val status: DownloadStatus,
         val downloadProgress: Float,
-        val isDownloaded: Boolean
     ) : MapListItem {
         override val key: String = "r_${region.downloadName}"
     }
@@ -26,8 +25,12 @@ sealed interface MapListItem {
     }
 }
 
+enum class DownloadStatus {
+    ENQUEUED, ACTIVE, DOWNLOADED, NONE
+}
+
 enum class PayloadFlags {
-    IS_DOWNLOADING, DOWNLOAD_PROGRESS, IS_DOWNLOADED
+    STATUS, DOWNLOAD_PROGRESS
 }
 
 data class Payloads(val flags: Set<PayloadFlags>)
@@ -45,9 +48,8 @@ object MapListItemDiff : DiffUtil.ItemCallback<MapListItem>() {
         if (oldItem is MapListItem.RegionItem && newItem is MapListItem.RegionItem) {
             if (oldItem.key == newItem.key) {
                 val flags = EnumSet.noneOf(PayloadFlags::class.java)
-                if (oldItem.isDownloading != newItem.isDownloading) flags.add(PayloadFlags.IS_DOWNLOADING)
+                if (oldItem.status != newItem.status) flags.add(PayloadFlags.STATUS)
                 if (oldItem.downloadProgress != newItem.downloadProgress) flags.add(PayloadFlags.DOWNLOAD_PROGRESS)
-                if (oldItem.isDownloaded != newItem.isDownloaded) flags.add(PayloadFlags.IS_DOWNLOADED)
                 return if (flags.isEmpty()) null else Payloads(flags)
             }
         }

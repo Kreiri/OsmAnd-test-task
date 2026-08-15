@@ -1,8 +1,10 @@
 package com.example.osmandtesttask.data.downloader
 
 import android.os.SystemClock
+import android.util.Log
 import com.example.osmandtesttask.common.Logs
 import com.example.osmandtesttask.common.capitalizeFirstChar
+import com.example.osmandtesttask.common.removeAndReturnIf
 import com.example.osmandtesttask.data.api.MapDownloadApiService
 import com.example.osmandtesttask.domain.LocaleProvider
 import com.example.osmandtesttask.domain.downloader.DownloadState
@@ -12,6 +14,7 @@ import com.example.osmandtesttask.domain.downloader.DownloaderState
 import com.example.osmandtesttask.domain.downloader.DownloadsIndex
 import com.example.osmandtesttask.domain.downloader.MapDownloadError
 import com.example.osmandtesttask.domain.downloader.MapDownloader
+import com.example.osmandtesttask.domain.downloader.matches
 import com.example.osmandtesttask.domain.models.Region
 import com.example.osmandtesttask.domain.storage.StorageManager
 import kotlinx.coroutines.CoroutineScope
@@ -48,10 +51,11 @@ class MapDownloaderImpl(
 
     private var downloadJob: Job? = null
 
-    private var queueChannel = createChannel()
+    private val queueLock = Any()
+    private val queue = Collections.synchronizedList(mutableListOf<DownloadTask>())
+    private var signalChannel = createSignalChannel()
     private var queueJob: Job? = null
 
-    private val enqueuedList = Collections.synchronizedList(mutableListOf<DownloadTask>())
 
     private val _state = MutableStateFlow<DownloaderState>(DownloaderState.Empty)
     override val state: StateFlow<DownloaderState> = _state.asStateFlow()
@@ -67,7 +71,9 @@ class MapDownloaderImpl(
             DownloaderState.Empty -> {
                 true
             }
-
+            is DownloaderState.Waiting -> {
+                true
+            }
             is DownloaderState.Processing if state.downloadState == DownloadState.Finished -> {
                 true
             }
@@ -92,17 +98,45 @@ class MapDownloaderImpl(
         launchQueue()
     }
 
-    private fun createChannel() = Channel<DownloadTask>(Channel.UNLIMITED)
+    override fun enqueueDownload(region: Region) {
+        doEnqueueDownload(region)
+    }
+
+    override fun cancelDownload(region: Region) {
+        if (getActiveDownload()?.matches(region) == true) {
+            downloadJob?.cancel(ActiveDownloadUserCancellationException())
+            downloadJob = null
+            Log.d("downloader", "canceled active download for ${region.downloadName}")
+        }
+        val removed = synchronized(queueLock) {
+            queue.removeAndReturnIf { it.matches(region) }
+        }
+        if (removed.isNotEmpty()) {
+            val task = removed.first()
+            _errors.tryEmit(MapDownloadError.CancelledByUser(task))
+            Log.d("downloader", "canceled enqueued download for ${task.downloadName}")
+        }
+    }
+
+    override fun cancelAll() {
+        cancelQueue()
+        downloadJob?.cancel()
+        queue.clear()
+        _state.value = DownloaderState.Empty
+        launchQueue()
+    }
+
+
+    private fun createSignalChannel() = Channel<Unit>(Channel.UNLIMITED)
 
     private fun launchQueue() {
-
-        Logs.d("downloader", "launch queue")
-        queueChannel = createChannel()
         queueJob = externalScope.launch {
             try {
-                for (downloadTask in queueChannel) {
-                    Logs.d("Downloader", "getting ${downloadTask.downloadName} from queue")
-                    enqueuedList.remove(downloadTask)
+                for (signal: Unit in signalChannel) {
+                    val downloadTask = synchronized(queueLock) {
+                        queue.removeFirstOrNull()
+                    }
+                    if (downloadTask == null) continue
                     startDownloadJob(downloadTask)
                 }
             } catch (e: CancellationException) {
@@ -112,10 +146,10 @@ class MapDownloaderImpl(
     }
 
     private fun cancelQueue() {
-        Logs.d("downloader", "cancel queue")
-        queueChannel.close()
+        signalChannel.close()
         queueJob?.cancel()
         queueJob = null
+        signalChannel = createSignalChannel()
     }
 
     private suspend fun startDownloadJob(download: DownloadTask) {
@@ -128,8 +162,9 @@ class MapDownloaderImpl(
             }
         } catch (e: Exception) {
             Logs.d("Downloader", "download error: ${e.message}")
-            if (e is ActiveDownloadCancelledException) {
-                // todo: custom handling of user-initiated cancel?
+            if (e is ActiveDownloadUserCancellationException) {
+                val error = e.toDownloadError(download)
+                _errors.emit(error)
             } else if (e is CancellationException) {
                 throw e
             } else {
@@ -139,6 +174,8 @@ class MapDownloaderImpl(
         } finally {
             downloadJob = null
             updateState(activeDownload = null)
+            signalChannel.trySend(Unit)
+            Logs.d("downloader", "download job ended: ${download.downloadName}")
         }
     }
 
@@ -198,7 +235,7 @@ class MapDownloaderImpl(
     }
 
     private fun updateState(activeDownload: DownloadTask?, downloadState: DownloadState? = null) {
-        val currentEnqueued = enqueuedList.toList()
+        val currentEnqueued = synchronized(queueLock) { queue.toList() }
         val newState = if (activeDownload == null) {
             if (currentEnqueued.isEmpty()) DownloaderState.Empty
             else DownloaderState.Waiting(currentEnqueued)
@@ -210,37 +247,23 @@ class MapDownloaderImpl(
         _state.value = newState
     }
 
-    override fun enqueueDownload(region: Region) {
+    private fun doEnqueueDownload(region: Region) {
         val locale = localeProvider.invoke()
         val displayName = region.getLocalizedName(locale.language)
-        val download = DownloadTask(displayName, region.downloadName)
-        if (enqueuedList.contains(download)) return
 
-        val sent = queueChannel.trySend(download)
-        if (sent.isSuccess) {
-            Logs.d("Downloader", "enqueued ${download.downloadName}")
-            enqueuedList.add(download)
+        val addedDownload = synchronized(queueLock) {
+            if (queue.any { it.matches(region) }) null
+            else {
+                val download = DownloadTask(displayName, region.downloadName)
+                queue.add(download)
+                download
+            }
+        }
+        if (addedDownload != null) {
             updateState(activeDownload = getActiveDownload())
+            signalChannel.trySend(Unit)
             onEnqueue.invoke()
-        } else {
-            Logs.d("Downloader", "enqueuing ${download.downloadName} failed")
         }
-    }
-
-    override fun cancelDownload(region: Region) {
-        val downloadName = region.downloadName
-        if (getActiveDownload()?.downloadName == downloadName) {
-            downloadJob?.cancel(ActiveDownloadCancelledException())
-            downloadJob = null
-        }
-    }
-
-    override fun cancelAll() {
-        cancelQueue()
-        downloadJob?.cancel()
-        enqueuedList.clear()
-        _state.value = DownloaderState.Empty
-        launchQueue()
     }
 
     private fun composeFileName(downloadName: String): String =
@@ -308,4 +331,4 @@ class MapDownloaderImpl(
     }
 }
 
-private class ActiveDownloadCancelledException : CancellationException("Cancelled by request")
+class ActiveDownloadUserCancellationException : CancellationException("Cancelled by request")

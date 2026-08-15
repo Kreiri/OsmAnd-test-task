@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.example.osmandtesttask.R
+import com.example.osmandtesttask.domain.downloader.MapDownloadError
 import com.example.osmandtesttask.domain.models.Region
 import com.example.osmandtesttask.ui.common.extensions.getCurrentLocale
 import com.example.osmandtesttask.ui.common.navigation.NavDestination
@@ -84,7 +85,14 @@ class MapsListFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.downloadErrors.collect { error ->
                     val downloadName = error.download.displayName
-                    val message = getString(R.string.error_msg_map_download_failed, downloadName)
+                    val message = when (error) {
+                        is MapDownloadError.CancelledByUser -> getString(
+                            R.string.error_msg_map_download_cancelled,
+                            downloadName
+                        )
+
+                        else -> getString(R.string.error_msg_map_download_failed, downloadName)
+                    }
                     Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
                 }
             }

@@ -27,7 +27,7 @@ class StorageManagerImpl(
             val info = StorageInfo(totalBytes, availableBytes)
             Logs.d(
                 "storage",
-                "on ${directory.path} filesystem: total ~${totalBytes / 1000_000} MB, available ~${availableBytes / 1000_000} MB"
+                "on ${directory.path} filesystem: total ~${totalBytes / (1024*1024)} MB, available ~${availableBytes / (1024*1024)} MB"
             )
             _storageInfo.value = info
         }

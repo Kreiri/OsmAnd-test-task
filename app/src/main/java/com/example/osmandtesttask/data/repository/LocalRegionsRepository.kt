@@ -1,8 +1,8 @@
 package com.example.osmandtesttask.data.repository
 
 import com.example.osmandtesttask.common.Logs
-import com.example.osmandtesttask.data.downloader.toAppError
 import com.example.osmandtesttask.data.remote.parsers.RemoteRegionsListParser
+import com.example.osmandtesttask.data.util.toAppError
 import com.example.osmandtesttask.domain.AssetProvider
 import com.example.osmandtesttask.domain.models.AppResult
 import com.example.osmandtesttask.domain.models.RegionsList

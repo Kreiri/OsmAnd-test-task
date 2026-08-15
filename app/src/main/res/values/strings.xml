@@ -3,10 +3,17 @@
 
     <string name="error_msg_maps_list_download_failed">Maps list download failed.</string>
     <string name="error_msg_map_download_failed">%s: download failed.</string>
+    <string name="error_msg_map_download_cancelled">%s: download cancelled.</string>
 
     <string name="screen_title_downlaod_maps">Download Maps</string>
 
-    <string name="notification_map_download_progress_text">Downloading map (%1$d): %2$s: %3$s%%</string>
+    <string name="notification_map_download_many_title">Downloading maps (%1$d)</string>
+    <string name="notification_map_download_title">Downloading map</string>
+    <string name="notification_map_download_waiting_text">…</string>
+    <string name="notification_map_download_progress_text">%1$s: %2$s%% (%3$s of %4$s).</string>
+    <string name="notification_map_download_completed_text">%1$s downloaded.</string>
+    <string name="notification_map_download_cancelled_text">%1$s download cancelled.</string>
+    <string name="notification_map_download_error_text">Failed to download %1$s.</string>
 
     <string name="notifications_channel_default">Notifications</string>
 

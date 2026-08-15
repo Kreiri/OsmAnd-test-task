@@ -136,16 +136,10 @@ class MapsListAdapter(
             val region = item.region
 
             val shouldUpdateAll = payloads.isEmpty()
-            val progressChanged =
-                shouldUpdateAll || payloads.contains(PayloadFlags.DOWNLOAD_PROGRESS)
-            val isDownloadingChanged =
-                shouldUpdateAll || payloads.contains(PayloadFlags.IS_DOWNLOADING)
-            val isDownloadedChanged =
-                shouldUpdateAll || payloads.contains(PayloadFlags.IS_DOWNLOADED)
-
+            val progressChanged = payloads.contains(PayloadFlags.DOWNLOAD_PROGRESS)
+            val statusChanged = payloads.contains(PayloadFlags.STATUS)
 
             if (shouldUpdateAll) {
-
                 val context = itemView.context
                 val locale = context.getCurrentLocale()
                 regionName.text = region.getLocalizedName(locale.language)
@@ -171,27 +165,26 @@ class MapsListAdapter(
                 }
             }
 
-            if (shouldUpdateAll || isDownloadingChanged) {
-                val isDownloadable = region.map
-                val isDownloading = item.isDownloading
-                downloadButton.visibility =
-                    if (isDownloadable && !isDownloading) View.VISIBLE else View.GONE
-                cancelButton.visibility =
-                    if (isDownloadable && isDownloading) View.VISIBLE else View.GONE
-                progressBar.visibility = if (isDownloading) View.VISIBLE else View.GONE
-            }
-
-            if (shouldUpdateAll || progressChanged) {
-                progressBar.progress = (item.downloadProgress * 100).toInt()
-            }
-            if (shouldUpdateAll || isDownloadedChanged) {
+            if (shouldUpdateAll || statusChanged) {
                 val context = itemView.context
-                val tintColor = if (item.isDownloaded) {
+                val isDownloadable = region.map
+                val isActiveOrEnqueued = item.status == DownloadStatus.ACTIVE || item.status == DownloadStatus.ENQUEUED
+                val isDownloaded = item.status == DownloadStatus.DOWNLOADED
+                downloadButton.visibility =
+                    if (isDownloadable && !isActiveOrEnqueued) View.VISIBLE else View.GONE
+                cancelButton.visibility =
+                    if (isDownloadable && isActiveOrEnqueued) View.VISIBLE else View.GONE
+                progressBar.visibility = if (isActiveOrEnqueued) View.VISIBLE else View.GONE
+                val tintColor = if (isDownloaded) {
                     ContextCompat.getColor(context, R.color.resourceDownloadedIconColor)
                 } else {
                     ContextCompat.getColor(context, R.color.regionsListIconTintColor)
                 }
                 iconView.setColorFilter(tintColor)
+            }
+
+            if (shouldUpdateAll || progressChanged) {
+                progressBar.progress = (item.downloadProgress * 100).toInt()
             }
         }
     }

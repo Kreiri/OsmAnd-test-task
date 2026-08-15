@@ -10,9 +10,9 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.withStyledAttributes
 import com.example.osmandtesttask.R
 import com.example.osmandtesttask.common.asFractionOf
-import com.example.osmandtesttask.common.toReadableFileSize
 import com.example.osmandtesttask.ui.common.extensions.dpToPx
 import com.example.osmandtesttask.ui.common.extensions.resolvePaddings
+import com.example.osmandtesttask.ui.common.extensions.toReadableFileSize
 import com.google.android.material.progressindicator.LinearProgressIndicator
 
 class StorageInfoView @JvmOverloads constructor(

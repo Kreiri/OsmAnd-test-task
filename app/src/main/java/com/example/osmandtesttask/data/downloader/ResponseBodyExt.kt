@@ -14,7 +14,7 @@ fun ResponseBody.toFileWithProgress(destination: File) = flow<DownloadState> {
     val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
     var bytesRead = 0L
 
-    emit(DownloadState.Progress(0, totalBytes))
+    emit(DownloadState.Progress(totalBytes, 0))
 
     try {
         if (destination.exists()) destination.delete()
@@ -30,7 +30,7 @@ fun ResponseBody.toFileWithProgress(destination: File) = flow<DownloadState> {
                     bytesRead += bufferBytesRead
 
                     if (bytesRead == totalBytes) emit(DownloadState.Finished)
-                    else emit(DownloadState.Progress(bytesRead, totalBytes))
+                    else emit(DownloadState.Progress(totalBytes, bytesRead))
                 }
                 outputStream.flush()
             }

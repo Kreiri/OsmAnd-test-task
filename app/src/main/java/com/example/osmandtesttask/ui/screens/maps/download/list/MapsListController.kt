@@ -8,6 +8,9 @@ import com.example.osmandtesttask.domain.LocaleProvider
 import com.example.osmandtesttask.domain.downloader.DownloadState
 import com.example.osmandtesttask.domain.downloader.DownloadedFileInfo
 import com.example.osmandtesttask.domain.downloader.DownloaderState
+import com.example.osmandtesttask.domain.downloader.hasActive
+import com.example.osmandtesttask.domain.downloader.hasFileForRegion
+import com.example.osmandtesttask.domain.downloader.hasQueued
 import com.example.osmandtesttask.domain.models.Region
 import com.example.osmandtesttask.domain.models.RegionType
 import com.example.osmandtesttask.domain.models.regionsComparator
@@ -84,22 +87,32 @@ class MapsListController(
         downloaderState: DownloaderState,
         downloadedFiles: Set<DownloadedFileInfo>
     ): MapListItem.RegionItem {
-        var isDownloading = false
-        var progress = 0f
+        val status: DownloadStatus
+        val downloadProgress: Float
         if (downloaderState is DownloaderState.Processing) {
-            isDownloading = (downloaderState.activeDownload.downloadName == region.downloadName)
-            if (isDownloading) {
-                val downloadState = downloaderState.downloadState
-                if (downloadState is DownloadState.Progress) {
-                    progress = downloadState.progress
-                } else if (downloadState is DownloadState.Finished) {
-                    progress = 1f
+            if (downloaderState.hasActive(region)) {
+                status = DownloadStatus.ACTIVE
+                downloadProgress = when (val ds = downloaderState.downloadState) {
+                    is DownloadState.Progress -> ds.progress
+                    is DownloadState.Finished -> 1f
+                    else -> 0f
+                }
+            } else {
+                downloadProgress = 0f
+                status = if (downloaderState.hasQueued(region)) {
+                    DownloadStatus.ENQUEUED
+                } else {
+                    DownloadStatus.NONE
                 }
             }
+        } else {
+            downloadProgress = 0f
+            status = if (downloadedFiles.hasFileForRegion(region)) {
+                DownloadStatus.DOWNLOADED
+            } else {
+                DownloadStatus.NONE
+            }
         }
-
-        val isDownloaded = downloadedFiles.any { it.downloadName == region.downloadName }
-
-        return MapListItem.RegionItem(region, indexPath, isDownloading, progress, isDownloaded)
+        return MapListItem.RegionItem(region, indexPath, status, downloadProgress)
     }
 }

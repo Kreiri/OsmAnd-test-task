@@ -6,12 +6,12 @@ import com.example.osmandtesttask.data.remote.parsers.RemoteRegionsListParser
 import com.example.osmandtesttask.domain.AssetProvider
 import com.example.osmandtesttask.domain.models.AppResult
 import com.example.osmandtesttask.domain.models.RegionsList
-import com.example.osmandtesttask.domain.repository.IRegionRepository
+import com.example.osmandtesttask.domain.repository.RegionRepository
 
 class LocalRegionsRepository(
     private val assetProvider: AssetProvider,
     private val regionsFilePath: String
-): IRegionRepository {
+): RegionRepository {
     private val parser = RemoteRegionsListParser()
     private var data: RegionsList? = null
 

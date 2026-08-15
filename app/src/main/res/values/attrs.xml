@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="StorageInfoView">
+        <attr name="labelText" format="string|reference"/>
+        <attr name="spaceText" format="string|reference"/>
+        <attr name="barColor" format="color|reference"/>
+    </declare-styleable>
+</resources>

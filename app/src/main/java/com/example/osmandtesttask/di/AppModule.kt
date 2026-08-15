@@ -1,9 +1,12 @@
 package com.example.osmandtesttask.di
 
+import com.example.osmandtesttask.common.MapDownloadQualifier
+import com.example.osmandtesttask.common.ProviderQualifiers
+import com.example.osmandtesttask.common.ScopeQualifier
 import com.example.osmandtesttask.data.downloader.MapDownloaderImpl
 import com.example.osmandtesttask.domain.AssetProvider
 import com.example.osmandtesttask.domain.LocaleProvider
-import com.example.osmandtesttask.domain.downloader.IMapDownloader
+import com.example.osmandtesttask.domain.downloader.MapDownloader
 import com.example.osmandtesttask.ui.common.extensions.getCurrentLocale
 import com.example.osmandtesttask.ui.common.navigation.NavigationViewModel
 import com.example.osmandtesttask.ui.common.notifications.NotificationUtil
@@ -24,31 +27,32 @@ val appModule = module {
     viewModel<MapsListViewModel>()
     viewModel<MapsOverviewViewModel>()
 
-    single<CoroutineScope> { CoroutineScope(Dispatchers.Main + SupervisorJob()) }
+    single<CoroutineScope>(named(ScopeQualifier.APP_SCOPE)) { CoroutineScope(Dispatchers.Main + SupervisorJob()) }
 
-    single<File>(named(FolderQualifier.MAPS_DOWNLOAD)) {
+    single<File>(named(MapDownloadQualifier.FOLDER)) {
         File(androidContext().filesDir, "maps")
     }
 
     single<NotificationUtil> { NotificationUtil(androidContext()) }
 
-    single<LocaleProvider>(named(ProviderQualifier.LOCALE)) {
+    single<LocaleProvider>(named(ProviderQualifiers.LOCALE)) {
         { androidContext().getCurrentLocale() }
     }
 
-    single<AssetProvider> {
+    single<AssetProvider>(named(ProviderQualifiers.ASSET)) {
         { fileName ->
             val context = androidContext()
             context.assets.open(fileName)
         }
     }
 
-    single<IMapDownloader> {
+    single<MapDownloader> {
         MapDownloaderImpl(
             service = get(),
-            outputDir = get(named(FolderQualifier.MAPS_DOWNLOAD)),
-            externalScope = get(),
-            localeProvider = get(named(ProviderQualifier.LOCALE)),
+            outputDir = get(named(MapDownloadQualifier.FOLDER)),
+            externalScope = get(named(ScopeQualifier.APP_SCOPE)),
+            storageManager = get(),
+            localeProvider = get(named(ProviderQualifiers.LOCALE)),
             onEnqueue = {
                 MapDownloadService.start(androidContext())
             }

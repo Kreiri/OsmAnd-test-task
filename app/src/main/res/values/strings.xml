@@ -10,4 +10,7 @@
 
     <string name="notifications_channel_default">Notifications</string>
 
+    <string name="storage_label_internal">Internal memory</string>
+    <string name="storage_free_space">Free: %s</string>
+
 </resources>

@@ -11,9 +11,10 @@ import androidx.core.content.ContextCompat
 import com.example.osmandtesttask.R
 import com.example.osmandtesttask.common.Logs
 import com.example.osmandtesttask.common.formatAsPercentage1
+import com.example.osmandtesttask.common.ScopeQualifier
 import com.example.osmandtesttask.domain.downloader.DownloadState
 import com.example.osmandtesttask.domain.downloader.DownloaderState
-import com.example.osmandtesttask.domain.downloader.IMapDownloader
+import com.example.osmandtesttask.domain.downloader.MapDownloader
 import com.example.osmandtesttask.ui.common.notifications.NotificationUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -21,11 +22,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import org.koin.android.ext.android.inject
+import org.koin.core.qualifier.named
 
 class MapDownloadService : Service() {
-    private val downloader: IMapDownloader by inject()
+    private val downloader: MapDownloader by inject()
     private val notificationUtil: NotificationUtil by inject()
-    private val parentScope by inject<CoroutineScope>()
+    private val parentScope by inject<CoroutineScope>(named(ScopeQualifier.APP_SCOPE))
     private val serviceScope = parentScope + SupervisorJob()
 
     private var isFinishingGracefully = false

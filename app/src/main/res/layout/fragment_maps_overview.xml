@@ -7,18 +7,21 @@
     android:orientation="vertical">
 
     <FrameLayout
-        android:id="@+id/summaryView"
+        android:id="@+id/summary_view"
         android:layout_width="0dp"
-        android:layout_height="96dp"
+        android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
+        <com.example.osmandtesttask.ui.common.components.StorageInfoView
+            android:background="?attr/colorSurface"
+            android:id="@+id/storage_info"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="placeholder" />
+            app:labelText="@string/storage_label_internal"
+            tools:spaceText="13 GB"
+            tools:barColor="#ff0000"
+            />
     </FrameLayout>
 
     <androidx.fragment.app.FragmentContainerView
@@ -28,6 +31,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/summaryView"
+        app:layout_constraintTop_toBottomOf="@id/summary_view"
         tools:layout="@layout/fragment_maps_list" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    tools:layout_height="wrap_content"
+    tools:layout_width="match_parent"
+    tools:paddingHorizontal="16dp"
+    tools:paddingVertical="12dp"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <TextView
+        android:id="@+id/label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toStartOf="@id/free_space"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Internal memory" />
+
+    <TextView
+        android:id="@+id/free_space"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/label"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="13 GB" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="label,free_space" />
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/storage_bar"
+        style="@style/StorageSpaceBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/barrier"
+        tools:progress="30" />
+</merge>

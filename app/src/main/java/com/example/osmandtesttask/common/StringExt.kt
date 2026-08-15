@@ -1,5 +1,6 @@
 package com.example.osmandtesttask.common
 
+import android.content.Context
 import java.util.Locale
 
 fun String.capitalizeFirstChar(languageCode: String): String {
@@ -30,4 +31,8 @@ fun Float.formatAsPercentage100(): String {
 fun Float.formatAsPercentage1(): String {
     val percentage = this * 100
     return percentage.formatAsPercentage100()
+}
+
+fun Long.toReadableFileSize(context: Context): String {
+    return android.text.format.Formatter.formatFileSize(context, this)
 }

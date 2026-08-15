@@ -26,5 +26,31 @@
         <item name="iconTint">@color/listItemIconTintColor</item>
     </style>
 
+    <style name="MapDownloadProgress">
+        <item name="android:indeterminate">false</item>
+        <item name="android:max">100</item>
+        <item name="trackInnerCornerRadius">0dp</item>
+        <item name="trackCornerRadius">0dp</item>
+        <item name="indicatorTrackGapSize">0dp</item>
+        <item name="indicatorColor">@color/mapDownloadProgressIndicatorColor</item>
+        <item name="trackColor">@color/mapDownloadProgressTrackColor</item>
+        <item name="trackThickness">3dp</item>
+        <item name="trackStopIndicatorSize">0dp</item>
+        <item name="trackStopIndicatorPadding">0dp</item>
+    </style>
+
+    <style name="StorageSpaceBar">
+        <item name="android:indeterminate">false</item>
+        <item name="android:max">100</item>
+        <item name="trackInnerCornerRadius">0dp</item>
+        <item name="trackCornerRadius">0dp</item>
+        <item name="indicatorTrackGapSize">0dp</item>
+        <item name="indicatorColor">@color/storageSpaceIndicatorColor</item>
+        <item name="trackColor">@color/storageSpaceTrackColor</item>
+        <item name="trackThickness">16dp</item>
+        <item name="trackStopIndicatorSize">0dp</item>
+        <item name="trackStopIndicatorPadding">0dp</item>
+    </style>
+
 
 </resources>

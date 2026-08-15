@@ -10,9 +10,10 @@ import com.example.osmandtesttask.domain.downloader.DownloadTask
 import com.example.osmandtesttask.domain.downloader.DownloadedFileInfo
 import com.example.osmandtesttask.domain.downloader.DownloaderState
 import com.example.osmandtesttask.domain.downloader.DownloadsIndex
-import com.example.osmandtesttask.domain.downloader.IMapDownloader
+import com.example.osmandtesttask.domain.downloader.MapDownloader
 import com.example.osmandtesttask.domain.downloader.MapDownloadError
 import com.example.osmandtesttask.domain.models.Region
+import com.example.osmandtesttask.domain.storage.StorageManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -40,9 +41,10 @@ class MapDownloaderImpl(
     private val service: MapDownloadApiService,
     private val outputDir: File,
     private val externalScope: CoroutineScope,
+    private val storageManager: StorageManager,
     private val localeProvider: LocaleProvider,
     private val onEnqueue: () -> Unit
-) : IMapDownloader {
+) : MapDownloader {
 
     private var downloadJob: Job? = null
 
@@ -155,7 +157,9 @@ class MapDownloaderImpl(
                 Logs.d("Downloader", "received success response for ${download.downloadName}")
                 val body = response.body() ?: throw HttpException(response)
                 saveFileWithProgress(download, body, destination, downloadDestination)
+                storageManager.update()
             } else {
+                storageManager.update()
                 throw HttpException(response)
             }
         }
@@ -211,9 +215,7 @@ class MapDownloaderImpl(
         val download = DownloadTask(displayName, region.downloadName)
         if (enqueuedList.contains(download)) return
 
-        val queue = queueChannel ?: return
-
-        val sent = queue.trySend(download)
+        val sent = queueChannel.trySend(download)
         if (sent.isSuccess) {
             Logs.d("Downloader", "enqueued ${download.downloadName}")
             enqueuedList.add(download)

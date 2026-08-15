@@ -1,5 +1,6 @@
 package com.example.osmandtesttask.domain.downloader
 
+import com.example.osmandtesttask.common.asFractionOf
 import com.example.osmandtesttask.domain.errors.AppError
 import com.example.osmandtesttask.domain.errors.NetworkError
 import com.example.osmandtesttask.domain.errors.StorageError
@@ -7,7 +8,7 @@ import com.example.osmandtesttask.domain.models.Region
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-interface IMapDownloader {
+interface MapDownloader {
     fun enqueueDownload(region: Region)
     fun cancelDownload(region: Region)
     fun cancelAll()
@@ -41,10 +42,7 @@ sealed interface DownloadState {
         /**
          * progress as expressed with float values from 0 to 1. 1 is considered 100%
          */
-        val progress: Float =
-            if (bytesRead <= 0L) 0f
-            else if (bytesRead == totalBytes) 1f
-            else (bytesRead.toFloat() / totalBytes)
+        val progress: Float = bytesRead.asFractionOf(totalBytes)
     }
 }
 

@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ListAdapter
@@ -124,7 +125,7 @@ class MapsListAdapter(
         val downloadButton: Button = view.findViewById(R.id.download_button)
         val cancelButton: Button = view.findViewById(R.id.cancelButton)
         val iconView: ImageView = view.findViewById(R.id.icon_view)
-        val progressBar: LinearProgressIndicator = view.findViewById(R.id.progressIndicator)
+        val progressBar: ProgressBar = view.findViewById(R.id.progressIndicator)
 
         fun bind(
             item: MapListItem.RegionItem,

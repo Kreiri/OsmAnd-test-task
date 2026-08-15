@@ -4,34 +4,38 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.osmandtesttask.domain.MapsManager
 import com.example.osmandtesttask.domain.errors.AppError
-import com.example.osmandtesttask.domain.models.RegionsList
 import com.example.osmandtesttask.domain.models.onFailure
 import com.example.osmandtesttask.domain.models.onSuccess
+import com.example.osmandtesttask.domain.storage.StorageInfo
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-sealed interface UIState {
-    object Loading: UIState
-    data class Success(val regionsList: RegionsList): UIState
-    data class Failure(val error: AppError): UIState
+sealed interface RegionsListState {
+    object Loading: RegionsListState
+    object Success: RegionsListState
+    data class Failure(val error: AppError): RegionsListState
 }
 class MapsOverviewViewModel(
     private val mapsManager: MapsManager
 ): ViewModel() {
 
-    val _uiState = MutableStateFlow<UIState>(UIState.Loading)
-    val uiState: StateFlow<UIState> = _uiState.asStateFlow()
+    private val _regionsListState = MutableStateFlow<RegionsListState>(RegionsListState.Loading)
+    val regionsListState = _regionsListState.asStateFlow()
+    val storageInfo = mapsManager.storageInfo
 
     fun loadRegionsList() {
         viewModelScope.launch {
-            _uiState.value = UIState.Loading
+            _regionsListState.value = RegionsListState.Loading
             val result = mapsManager.loadRegions()
             result.onFailure {
-                _uiState.value = UIState.Failure(it)
+                _regionsListState.value = RegionsListState.Failure(it)
             }.onSuccess {
-               _uiState.value = UIState.Success(it)
+               _regionsListState.value = RegionsListState.Success
             }
         }
     }

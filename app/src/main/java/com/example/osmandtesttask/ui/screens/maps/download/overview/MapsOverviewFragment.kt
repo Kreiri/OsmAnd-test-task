@@ -10,6 +10,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.osmandtesttask.R
+import com.example.osmandtesttask.domain.storage.StorageInfo
+import com.example.osmandtesttask.ui.common.components.StorageInfoView
 import com.example.osmandtesttask.ui.screens.maps.download.list.MapsListFragment
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -17,7 +19,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class MapsOverviewFragment : Fragment() {
     val vm by viewModel<MapsOverviewViewModel>()
 
-
+    private lateinit var storageView: StorageInfoView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,28 +39,44 @@ class MapsOverviewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        storageView = view.findViewById(R.id.storage_info)
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                vm.uiState.collect { state ->
-                    when (state) {
-                        is UIState.Failure -> {
-                            Toast.makeText(
-                                requireContext(),
-                                R.string.error_msg_maps_list_download_failed,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                       UIState.Loading -> {
-
-                       }
-                       is UIState.Success -> {
-                           val fragment = MapsListFragment.createForTopLevel()
-                           childFragmentManager.beginTransaction().replace(
-                               R.id.child_fragment_container, fragment
-                           ).commit()
-                       }
-                   }
+                vm.regionsListState.collect { state ->
+                    updateRegionsList(state)
                 }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.storageInfo.collect { state ->
+                    updateStorageView(state)
+                }
+            }
+        }
+    }
+
+    private fun updateStorageView(state: StorageInfo) {
+        storageView.updateStorageInfo(state.totalBytes, state.availableBytes)
+    }
+
+    private fun updateRegionsList(state: RegionsListState) {
+        when (state) {
+            is RegionsListState.Failure -> {
+                Toast.makeText(
+                    requireContext(),
+                    R.string.error_msg_maps_list_download_failed,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            RegionsListState.Loading -> {
+
+            }
+            is RegionsListState.Success -> {
+                val fragment = MapsListFragment.createForTopLevel()
+                childFragmentManager.beginTransaction().replace(
+                    R.id.child_fragment_container, fragment
+                ).commit()
             }
         }
     }

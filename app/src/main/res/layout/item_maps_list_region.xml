@@ -30,13 +30,8 @@
             android:id="@+id/progressIndicator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:indeterminate="false"
-            app:trackInnerCornerRadius="0dp"
-            app:trackCornerRadius="0dp"
-            app:indicatorTrackGapSize="0dp"
-            android:max="100"
-            tools:progress="30" />
+            tools:progress="30"
+            style="@style/MapDownloadProgress" />
 
     </LinearLayout>
 

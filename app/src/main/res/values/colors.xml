@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="listItemBackgroundColor">#ffffff</color>
-    <color name="listItemTextColor">#212121</color>
-    <color name="listItemIconTintColor">#727272</color>
-    <color name="listDividerColor">#e5e5e5</color>
 
-    <color name="backgroundColor">#F0F0F0</color>
-    <color name="colorSurface">#FFFFFF</color>
-    <color name="colorPrimaryContainer">#ff8800</color>
-    <color name="colorOnPrimaryContainer">#ffffff</color>
+    <color name="brandColorDark">#e68200</color>
+    <color name="brandColor">#ff8800</color>
+    <color name="onBrandColor">#ffffff</color>
+    <color name="activityBackgroundColor">#eaeaea</color>
+    <color name="contentBackgroundColor">#ffffff</color>
+    <color name="textColor">#212121</color>
+    <color name="dividerColor">#e5e5e5</color>
+    <color name="primaryColor">#2175F3</color>
+    <color name="progressTrackColor">#F0F0F0</color>
 
-    <color name="colorPrimary">#2175F3</color>
-    <color name="colorSecondaryContainer">#F0F0F0</color>
+    <color name="statusBarColor">@color/brandColorDark</color>
 
-    <color name="mapDownloadProgressIndicatorColor">@color/colorPrimary</color>
-    <color name="mapDownloadProgressTrackColor">@color/colorSecondaryContainer</color>
+    <color name="mapDownloadProgressIndicatorColor">@color/primaryColor</color>
+    <color name="storageSpaceIndicatorColor">@color/brandColor</color>
 
-    <color name="storageSpaceIndicatorColor">@color/colorPrimaryContainer</color>
-    <color name="storageSpaceTrackColor">@color/colorSecondaryContainer</color>
-
-    <color name="downloadedIconColor">#00ff00</color>
+    <color name="resourceDownloadedIconColor">#00ff00</color>
+    <color name="regionsListIconTintColor">#727272</color>
 </resources>

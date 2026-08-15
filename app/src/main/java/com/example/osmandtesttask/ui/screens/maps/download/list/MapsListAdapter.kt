@@ -14,7 +14,6 @@ import com.example.osmandtesttask.R
 import com.example.osmandtesttask.domain.models.Region
 import com.example.osmandtesttask.domain.models.RegionType
 import com.example.osmandtesttask.ui.common.extensions.getCurrentLocale
-import com.google.android.material.progressindicator.LinearProgressIndicator
 
 class MapsListAdapter(
     private val onRegionItemTapped: (itemPath: List<Int>, item: Region) -> Unit,
@@ -188,9 +187,9 @@ class MapsListAdapter(
             if (shouldUpdateAll || isDownloadedChanged) {
                 val context = itemView.context
                 val tintColor = if (item.isDownloaded) {
-                    ContextCompat.getColor(context, R.color.downloadedIconColor)
+                    ContextCompat.getColor(context, R.color.resourceDownloadedIconColor)
                 } else {
-                    ContextCompat.getColor(context, R.color.listItemIconTintColor)
+                    ContextCompat.getColor(context, R.color.regionsListIconTintColor)
                 }
                 iconView.setColorFilter(tintColor)
             }

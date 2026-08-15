@@ -22,7 +22,7 @@ class MapsListController(
         val context = recyclerView.context
         val divider = MarginDividerItemDecoration(
             1.dpToPx(context),
-            ContextCompat.getColor( context, R.color.listDividerColor),
+            ContextCompat.getColor( context, R.color.dividerColor),
             64.dpToPx(context), 0,
             alsoOmitItemIf = { adapter, position ->
                 (adapter as? MapsListAdapter)?.shouldSkipDividerForItemAt(position) ?: false

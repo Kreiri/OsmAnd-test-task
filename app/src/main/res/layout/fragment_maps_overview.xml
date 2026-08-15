@@ -14,13 +14,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
         <com.example.osmandtesttask.ui.common.components.StorageInfoView
-            android:background="?attr/colorSurface"
+            style="@style/StorageSpaceBar"
             android:id="@+id/storage_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:labelText="@string/storage_label_internal"
             tools:spaceText="13 GB"
-            tools:barColor="#ff0000"
             />
     </FrameLayout>
 

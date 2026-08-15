@@ -4,13 +4,13 @@
     <style name="ListItem.MapRegion" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">52dp</item>
-        <item name="android:background">@color/listItemBackgroundColor</item>
+        <item name="android:background">@color/contentBackgroundColor</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">horizontal</item>
     </style>
 
     <style name="ListItem.MapRegion.Text" parent="Widget.AppCompat.TextView">
-        <item name="android:textColor">@color/listItemTextColor</item>
+        <item name="android:textColor">@color/textColor</item>
         <item name="android:textSize">16sp</item>
     </style>
 
@@ -23,33 +23,32 @@
         <item name="android:insetBottom">0dp</item>
         <item name="iconGravity">textStart</item>
         <item name="iconPadding">0dp</item>
-        <item name="iconTint">@color/listItemIconTintColor</item>
+        <item name="iconTint">@color/regionsListIconTintColor</item>
     </style>
 
-    <style name="MapDownloadProgress">
+    <style name="LinearProgress">
         <item name="android:indeterminate">false</item>
         <item name="android:max">100</item>
         <item name="trackInnerCornerRadius">0dp</item>
         <item name="trackCornerRadius">0dp</item>
         <item name="indicatorTrackGapSize">0dp</item>
-        <item name="indicatorColor">@color/mapDownloadProgressIndicatorColor</item>
-        <item name="trackColor">@color/mapDownloadProgressTrackColor</item>
-        <item name="trackThickness">3dp</item>
         <item name="trackStopIndicatorSize">0dp</item>
         <item name="trackStopIndicatorPadding">0dp</item>
+        <item name="trackColor">@color/progressTrackColor</item>
+
+    </style>
+    <style name="LinearProgress.MapDownload">
+        <item name="indicatorColor">@color/mapDownloadProgressIndicatorColor</item>
+        <item name="trackThickness">3dp</item>
     </style>
 
     <style name="StorageSpaceBar">
-        <item name="android:indeterminate">false</item>
-        <item name="android:max">100</item>
-        <item name="trackInnerCornerRadius">0dp</item>
-        <item name="trackCornerRadius">0dp</item>
-        <item name="indicatorTrackGapSize">0dp</item>
-        <item name="indicatorColor">@color/storageSpaceIndicatorColor</item>
-        <item name="trackColor">@color/storageSpaceTrackColor</item>
-        <item name="trackThickness">16dp</item>
-        <item name="trackStopIndicatorSize">0dp</item>
-        <item name="trackStopIndicatorPadding">0dp</item>
+        <item name="barColor">@color/storageSpaceIndicatorColor</item>
+        <item name="barTrackColor">@color/progressTrackColor</item>
+        <item name="barThickness">16dp</item>
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="android:textColor">@color/textColor</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
 

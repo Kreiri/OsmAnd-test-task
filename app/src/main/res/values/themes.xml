@@ -1,12 +1,12 @@
 <resources>
     <!-- Base application theme. -->
     <style name="Base.Theme.OsmandTestTask" parent="Theme.Material3.Light.NoActionBar">
-        <item name="android:colorBackground">@color/backgroundColor</item>
-        <item name="colorSurface">@color/colorSurface</item>
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryContainer">@color/colorPrimaryContainer</item>
-        <item name="colorOnPrimaryContainer">@color/colorOnPrimaryContainer</item>
-        <item name="colorSecondaryContainer">@color/colorSecondaryContainer</item>
+        <item name="android:colorBackground">@color/activityBackgroundColor</item>
+        <item name="colorSurface">@color/contentBackgroundColor</item>
+        <item name="colorPrimary">@color/brandColor</item>
+        <item name="colorPrimaryDark">@color/brandColorDark</item>
+        <item name="colorPrimaryContainer">@color/brandColor</item>
+        <item name="colorOnPrimaryContainer">@color/onBrandColor</item>
 
     </style>
 

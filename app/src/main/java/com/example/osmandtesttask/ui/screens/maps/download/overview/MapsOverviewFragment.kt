@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -19,7 +20,8 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class MapsOverviewFragment : Fragment() {
     val vm by viewModel<MapsOverviewViewModel>()
 
-    private lateinit var storageView: StorageInfoView
+    private var storageView: StorageInfoView? = null
+    private var loadingIndicator: ProgressBar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +42,12 @@ class MapsOverviewFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         storageView = view.findViewById(R.id.storage_info)
+
+        loadingIndicator = view.findViewById(R.id.loading_indicator)
+        if (savedInstanceState == null) {
+            loadingIndicator?.visibility = View.VISIBLE
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.regionsListState.collect { state ->
@@ -56,30 +64,50 @@ class MapsOverviewFragment : Fragment() {
         }
     }
 
+    override fun onDestroy() {
+        storageView = null
+        loadingIndicator = null
+        super.onDestroy()
+    }
+
     private fun updateStorageView(state: StorageInfo) {
-        storageView.updateStorageInfo(state.totalBytes, state.availableBytes)
+        storageView?.updateStorageInfo(state.totalBytes, state.availableBytes)
     }
 
     private fun updateRegionsList(state: RegionsListState) {
         when (state) {
             is RegionsListState.Failure -> {
-                Toast.makeText(
-                    requireContext(),
-                    R.string.error_msg_maps_list_download_failed,
-                    Toast.LENGTH_SHORT
-                ).show()
+                showErrorMessage()
+                loadingIndicator?.visibility = View.GONE
             }
 
             RegionsListState.Loading -> {
-
+                loadingIndicator?.visibility = View.VISIBLE
             }
 
             is RegionsListState.Success -> {
-                val fragment = MapsListFragment.createForTopLevel()
-                childFragmentManager.beginTransaction().replace(
-                    R.id.child_fragment_container, fragment
-                ).commit()
+                addContentFragment()
+                loadingIndicator?.visibility = View.GONE
             }
         }
+    }
+
+    private fun addContentFragment() {
+        var contentFragment =
+            childFragmentManager.findFragmentById(R.id.child_fragment_container) as? MapsListFragment
+        if (contentFragment == null) {
+            contentFragment = MapsListFragment.createForTopLevel()
+            childFragmentManager.beginTransaction().replace(
+                R.id.child_fragment_container, contentFragment
+            ).commit()
+        }
+    }
+
+    private fun showErrorMessage() {
+        Toast.makeText(
+            requireContext(),
+            R.string.error_msg_maps_list_download_failed,
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }

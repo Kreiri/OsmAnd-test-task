@@ -18,7 +18,7 @@ class RemoteRegion(
 ) {
 
     private fun resolveString(value: String?): String? {
-        if (value == "\$name") return this.name
+        if (value == $$"$name") return this.name
         return value
     }
 
@@ -85,9 +85,7 @@ data class DownloadAffixes(
     val innerDownloadSuffix: String?,
     val downloadPrefix: String?,
     val innerDownloadPrefix: String?,
-) {
-
-}
+)
 
 private fun String.parseAsType(): RegionType {
     return when (this) {

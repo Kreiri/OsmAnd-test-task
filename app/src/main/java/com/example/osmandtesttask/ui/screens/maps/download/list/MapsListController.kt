@@ -16,9 +16,12 @@ import com.example.osmandtesttask.domain.models.RegionType
 import com.example.osmandtesttask.domain.models.regionsComparator
 import com.example.osmandtesttask.ui.common.components.MarginDividerItemDecoration
 import com.example.osmandtesttask.ui.common.extensions.dpToPx
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
+import java.util.Locale
 
 class MapsListController(
     private val adapter: MapsListAdapter,
@@ -30,8 +33,10 @@ class MapsListController(
 
     private val localeProvider: LocaleProvider by inject(named(ProviderQualifiers.LOCALE))
     private val regionsComparator = regionsComparator(localeProvider)
+    private var recyclerView: RecyclerView? = null
 
-    fun setupRecycler(recyclerView: RecyclerView) {
+    fun attach(recyclerView: RecyclerView) {
+        this.recyclerView = recyclerView
         val context = recyclerView.context
         val divider = MarginDividerItemDecoration(
             1.dpToPx(context),
@@ -41,19 +46,28 @@ class MapsListController(
                 (adapter as? MapsListAdapter)?.shouldSkipDividerForItemAt(position) ?: false
             }
         )
+        recyclerView.setHasFixedSize(true)
         recyclerView.addItemDecoration(divider)
         recyclerView.adapter = this.adapter
     }
 
-    fun setItems(
+    fun detach() {
+        this.recyclerView?.adapter = null
+        this.recyclerView = null
+    }
+
+    suspend fun setItems(
         indexPath: List<Int>,
         regions: List<Region>,
         downloaderState: DownloaderState,
         downloadedFiles: Set<DownloadedFileInfo>
     ) {
-        val items = buildItems(indexPath, regions, downloaderState, downloadedFiles)
-        adapter.submitList(items)
+        withContext(Dispatchers.Default) {
+            val items = buildItems(indexPath, regions, downloaderState, downloadedFiles)
+            adapter.submitList(items)
+        }
     }
+
 
     private fun buildItems(
         indexPath: List<Int>,
@@ -62,30 +76,47 @@ class MapsListController(
         downloadedFiles: Set<DownloadedFileInfo>
     ): List<MapListItem> {
         val list = mutableListOf<MapListItem>()
+        val locale = localeProvider.invoke()
         regions.forEachIndexed { regionIndex, region ->
             val regionPath = indexPath + regionIndex
             if (region.type == RegionType.CONTINENT) {
-                list.add(MapListItem.ContinentHeader(region))
+                list.add(makeContinentHeaderItem(region, locale))
                 val continentItems = region.regions.mapIndexed { childIndex, child ->
-                    makeRegionItem(child, regionPath + childIndex, downloaderState, downloadedFiles)
+                    makeRegionItem(
+                        child,
+                        regionPath + childIndex,
+                        downloaderState,
+                        downloadedFiles,
+                        locale
+                    )
                 }.sortedWith { item, item1 ->
                     regionsComparator.compare(item.region, item1.region)
                 }
                 list.addAll(continentItems)
                 list.add(MapListItem.ContinentFooter(region))
             } else {
-                val item = makeRegionItem(region, regionPath, downloaderState, downloadedFiles)
+                val item =
+                    makeRegionItem(region, regionPath, downloaderState, downloadedFiles, locale)
                 list.add(item)
             }
         }
         return list.toList()
     }
 
+    private fun makeContinentHeaderItem(
+        region: Region,
+        locale: Locale
+    ): MapListItem.ContinentHeader {
+        val displayedName = region.getLocalizedName(locale.language)
+        return MapListItem.ContinentHeader(region, displayedName)
+    }
+
     private fun makeRegionItem(
         region: Region,
         indexPath: List<Int>,
         downloaderState: DownloaderState,
-        downloadedFiles: Set<DownloadedFileInfo>
+        downloadedFiles: Set<DownloadedFileInfo>,
+        locale: Locale
     ): MapListItem.RegionItem {
         val status: DownloadStatus
         val downloadProgress: Float
@@ -113,6 +144,11 @@ class MapsListController(
                 DownloadStatus.NONE
             }
         }
-        return MapListItem.RegionItem(region, indexPath, status, downloadProgress)
+
+        val displayedName = region.getLocalizedName(locale.language)
+        val hasMap = region.type == RegionType.MAP || region.map
+        return MapListItem.RegionItem(
+            region, indexPath, displayedName, status, downloadProgress, hasMap
+        )
     }
 }

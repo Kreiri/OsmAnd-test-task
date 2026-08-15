@@ -49,7 +49,8 @@ sealed interface DownloadState {
 
 sealed interface MapDownloadError : AppError {
     val download: DownloadTask
-    data class CancelledByUser(override val download: DownloadTask): MapDownloadError
+
+    data class CancelledByUser(override val download: DownloadTask) : MapDownloadError
     data class NoInternet(override val download: DownloadTask) : MapDownloadError, NetworkError
     data class ServerError(override val download: DownloadTask, val code: Int) : MapDownloadError,
         NetworkError

@@ -1,8 +1,7 @@
 package com.example.osmandtesttask.data.downloader
 
 import android.os.SystemClock
-import android.util.Log
-import com.example.osmandtesttask.common.Logs
+import com.example.osmandtesttask.common.Logger
 import com.example.osmandtesttask.common.capitalizeFirstChar
 import com.example.osmandtesttask.common.removeAndReturnIf
 import com.example.osmandtesttask.data.api.MapDownloadApiService
@@ -20,6 +19,7 @@ import com.example.osmandtesttask.domain.storage.StorageManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -71,15 +71,14 @@ class MapDownloaderImpl(
             DownloaderState.Empty -> {
                 true
             }
+
             is DownloaderState.Waiting -> {
                 true
             }
-            is DownloaderState.Processing if state.downloadState == DownloadState.Finished -> {
-                true
-            }
 
-            else -> {
-                time - lastThrottleFlowEmitTime.get() >= throttleInterval
+            is DownloaderState.Processing -> {
+                state.downloadState !is DownloadState.Progress
+                        || time - lastThrottleFlowEmitTime.get() >= throttleInterval
             }
         }
         if (accept) lastThrottleFlowEmitTime.set(time)
@@ -103,19 +102,7 @@ class MapDownloaderImpl(
     }
 
     override fun cancelDownload(region: Region) {
-        if (getActiveDownload()?.matches(region) == true) {
-            downloadJob?.cancel(ActiveDownloadUserCancellationException())
-            downloadJob = null
-            Log.d("downloader", "canceled active download for ${region.downloadName}")
-        }
-        val removed = synchronized(queueLock) {
-            queue.removeAndReturnIf { it.matches(region) }
-        }
-        if (removed.isNotEmpty()) {
-            val task = removed.first()
-            _errors.tryEmit(MapDownloadError.CancelledByUser(task))
-            Log.d("downloader", "canceled enqueued download for ${task.downloadName}")
-        }
+        doCancelDownload(region)
     }
 
     override fun cancelAll() {
@@ -140,7 +127,7 @@ class MapDownloaderImpl(
                     startDownloadJob(downloadTask)
                 }
             } catch (e: CancellationException) {
-                Logs.d("Downloader", "queue job : CancellationException")
+                Logger.d("Downloader", "queue job : CancellationException")
             }
         }
     }
@@ -153,15 +140,15 @@ class MapDownloaderImpl(
     }
 
     private suspend fun startDownloadJob(download: DownloadTask) {
-        Logs.d("Downloader", "starting job for ${download.downloadName}")
+        Logger.d("Downloader", "starting job for ${download.downloadName}")
         updateState(activeDownload = download)
         try {
             withContext(Dispatchers.IO) {
                 downloadJob = currentCoroutineContext()[Job]
                 processDownload(download)
             }
-        } catch (e: Exception) {
-            Logs.d("Downloader", "download error: ${e.message}")
+        } catch (e: Throwable) {
+            Logger.d("Downloader", "download error: ${e.message}")
             if (e is ActiveDownloadUserCancellationException) {
                 val error = e.toDownloadError(download)
                 _errors.emit(error)
@@ -175,12 +162,12 @@ class MapDownloaderImpl(
             downloadJob = null
             updateState(activeDownload = null)
             signalChannel.trySend(Unit)
-            Logs.d("downloader", "download job ended: ${download.downloadName}")
+            Logger.d("downloader", "download job ended: ${download.downloadName}")
         }
     }
 
     private suspend fun processDownload(download: DownloadTask) {
-        Logs.d("Downloader", "launching download ${download.downloadName}")
+        Logger.d("Downloader", "launching download ${download.downloadName}")
         withContext(Dispatchers.IO) {
             val filename = composeFileName(download.downloadName)
             val destination = File(outputDir, filename)
@@ -192,7 +179,7 @@ class MapDownloaderImpl(
 
             val response = service.downloadMap(filename)
             if (response.isSuccessful) {
-                Logs.d("Downloader", "received success response for ${download.downloadName}")
+                Logger.d("Downloader", "received success response for ${download.downloadName}")
                 val body = response.body() ?: throw HttpException(response)
                 saveFileWithProgress(download, body, destination, downloadDestination)
                 storageManager.update()
@@ -215,18 +202,25 @@ class MapDownloaderImpl(
         destination: File,
         downloadDestination: File
     ) {
-        body.toFileWithProgress(downloadDestination).collect { downloadState ->
-            if (downloadState == DownloadState.Finished) {
-                if (destination.exists()) destination.delete()
-                destination.parentFile?.mkdirs()
-                downloadDestination.renameTo(destination)
-                val info = DownloadedFileInfo(destination.name, download.downloadName)
-                val oldIndex = _downloadsIndex.value
-                val newIndex = oldIndex.copy(downloadedFiles = oldIndex.downloadedFiles + info)
-                _downloadsIndex.value = newIndex
-                writeIndexToFile(newIndex)
+        try {
+            body.toFileWithProgress(downloadDestination).collect { downloadState ->
+                if (downloadState == DownloadState.Finished) {
+                    if (destination.exists()) destination.delete()
+                    destination.parentFile?.mkdirs()
+                    downloadDestination.renameTo(destination)
+                    val info = DownloadedFileInfo(destination.name, download.downloadName)
+                    val oldIndex = _downloadsIndex.value
+                    val newIndex = oldIndex.copy(downloadedFiles = oldIndex.downloadedFiles + info)
+                    _downloadsIndex.value = newIndex
+                    writeIndexToFile(newIndex)
+                }
+                updateState(download, downloadState)
             }
-            updateState(download, downloadState)
+        } catch (e: ActiveDownloadUserCancellationException) {
+            withContext(NonCancellable) {
+                updateState(download, DownloadState.Cancelled)
+            }
+            throw e
         }
     }
 
@@ -263,6 +257,22 @@ class MapDownloaderImpl(
             updateState(activeDownload = getActiveDownload())
             signalChannel.trySend(Unit)
             onEnqueue.invoke()
+        }
+    }
+
+    private fun doCancelDownload(region: Region) {
+        if (getActiveDownload()?.matches(region) == true) {
+            downloadJob?.cancel(ActiveDownloadUserCancellationException())
+            downloadJob = null
+            Logger.d("downloader", "canceled active download for ${region.downloadName}")
+        }
+        val removed = synchronized(queueLock) {
+            queue.removeAndReturnIf { it.matches(region) }
+        }
+        if (removed.isNotEmpty()) {
+            val task = removed.first()
+            _errors.tryEmit(MapDownloadError.CancelledByUser(task))
+            Logger.d("downloader", "canceled enqueued download for ${task.downloadName}")
         }
     }
 
@@ -308,7 +318,7 @@ class MapDownloaderImpl(
             val json = file.readText()
             val index = DownloadsIndexSerializer.deserialize(json)
             index ?: DownloadsIndex.blank()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             DownloadsIndex.blank()
         }
     }
@@ -319,8 +329,8 @@ class MapDownloaderImpl(
             file.parentFile?.mkdirs()
             val json = DownloadsIndexSerializer.serialize(index)
             file.writeText(json)
-        } catch (e: Exception) {
-            Logs.d("downloader", "error while saving index to file: ${e.message}")
+        } catch (e: Throwable) {
+            Logger.d("downloader", "error while saving index to file: ${e.message}")
         }
     }
 
@@ -331,4 +341,3 @@ class MapDownloaderImpl(
     }
 }
 
-class ActiveDownloadUserCancellationException : CancellationException("Cancelled by request")

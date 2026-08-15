@@ -7,7 +7,7 @@
         <item name="colorPrimaryDark">@color/brandColorDark</item>
         <item name="colorPrimaryContainer">@color/brandColor</item>
         <item name="colorOnPrimaryContainer">@color/onBrandColor</item>
-
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
     <style name="Theme.OsmandTestTask" parent="Base.Theme.OsmandTestTask" />

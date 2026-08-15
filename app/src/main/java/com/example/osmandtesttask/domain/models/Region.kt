@@ -9,10 +9,25 @@ data class Region(
     val downloadName: String,
     val type: RegionType?,
     val map: Boolean,
-    val translate: String?,
-    val regions: List<Region>
+    val translate: String?
 ) {
+
+    var regions: List<Region> = emptyList()
+        private set
+
+    constructor(
+        name: String,
+        downloadName: String,
+        type: RegionType?,
+        map: Boolean,
+        translate: String?,
+        regions: List<Region>
+    ) : this(name, downloadName, type, map, translate) {
+        this.regions = regions
+    }
+
     private val translations = RegionTranslations.parse(translate ?: "")
+
 
     fun getTranslation(field: String, locale: String): String? {
         return translations.getTranslation(field, locale)

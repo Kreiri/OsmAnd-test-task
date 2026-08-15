@@ -2,6 +2,7 @@ package com.example.osmandtesttask.data.downloader
 
 import com.example.osmandtesttask.domain.downloader.DownloadState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import okhttp3.ResponseBody
@@ -9,7 +10,7 @@ import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
 
-fun ResponseBody.toFileWithProgress(destination: File) = flow<DownloadState> {
+fun ResponseBody.toFileWithProgress(destination: File): Flow<DownloadState> = flow {
     val totalBytes = contentLength()
     val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
     var bytesRead = 0L
@@ -29,18 +30,17 @@ fun ResponseBody.toFileWithProgress(destination: File) = flow<DownloadState> {
                     outputStream.write(buffer, 0, bufferBytesRead)
                     bytesRead += bufferBytesRead
 
-                    if (bytesRead == totalBytes) emit(DownloadState.Finished)
-                    else emit(DownloadState.Progress(totalBytes, bytesRead))
+                    emit(DownloadState.Progress(totalBytes, bytesRead))
                 }
                 outputStream.flush()
             }
         }
+        emit(DownloadState.Finished)
     } catch (e: Throwable) {
         if (destination.exists()) {
             destination.delete()
         }
         if (e is CancellationException) {
-            emit(DownloadState.Cancelled)
             throw e
         }
         emit(DownloadState.Error(e))

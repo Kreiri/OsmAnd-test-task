@@ -38,7 +38,7 @@
 
     </style>
     <style name="LinearProgress.MapDownload">
-        <item name="indicatorColor">@color/mapDownloadProgressIndicatorColor</item>
+        <item name="indicatorColor">@color/progressIndicatorColor</item>
         <item name="trackThickness">3dp</item>
     </style>
 
@@ -50,6 +50,5 @@
         <item name="android:textColor">@color/textColor</item>
         <item name="android:textSize">16sp</item>
     </style>
-
 
 </resources>

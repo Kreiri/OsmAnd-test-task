@@ -2,7 +2,7 @@ package com.example.osmandtesttask.data.storage
 
 import android.os.Environment
 import android.os.StatFs
-import com.example.osmandtesttask.common.Logs
+import com.example.osmandtesttask.common.Logger
 import com.example.osmandtesttask.domain.storage.StorageInfo
 import com.example.osmandtesttask.domain.storage.StorageManager
 import kotlinx.coroutines.CoroutineScope
@@ -25,9 +25,9 @@ class StorageManagerImpl(
             val totalBytes = stats.totalBytes
             val availableBytes = stats.availableBytes
             val info = StorageInfo(totalBytes, availableBytes)
-            Logs.d(
+            Logger.d(
                 "storage",
-                "on ${directory.path} filesystem: total ~${totalBytes / (1024*1024)} MB, available ~${availableBytes / (1024*1024)} MB"
+                "on ${directory.path} filesystem: total ~${totalBytes / (1024 * 1024)} MB, available ~${availableBytes / (1024 * 1024)} MB"
             )
             _storageInfo.value = info
         }

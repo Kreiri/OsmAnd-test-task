@@ -10,13 +10,18 @@ sealed interface MapListItem {
     data class RegionItem(
         val region: Region,
         val indexPath: List<Int>,
+        val displayedName: String,
         val status: DownloadStatus,
         val downloadProgress: Float,
+        val hasMap: Boolean,
     ) : MapListItem {
         override val key: String = "r_${region.downloadName}"
     }
 
-    data class ContinentHeader(val region: Region) : MapListItem {
+    data class ContinentHeader(
+        val region: Region,
+        val displayedName: String,
+    ) : MapListItem {
         override val key: String = "ch_${region.downloadName}"
     }
 
@@ -41,7 +46,22 @@ object MapListItemDiff : DiffUtil.ItemCallback<MapListItem>() {
     }
 
     override fun areContentsTheSame(oldItem: MapListItem, newItem: MapListItem): Boolean {
-        return oldItem == newItem
+        if (oldItem::class != newItem::class) return false
+        return when(oldItem) {
+            is MapListItem.ContinentFooter -> true
+            is MapListItem.ContinentHeader -> {
+                newItem as MapListItem.ContinentHeader
+                oldItem.displayedName == newItem.displayedName
+            }
+            is MapListItem.RegionItem -> {
+                newItem as MapListItem.RegionItem
+                oldItem.displayedName == newItem.displayedName
+                        && oldItem.status == newItem.status
+                        && oldItem.downloadProgress == newItem.downloadProgress
+                        && oldItem.hasMap == newItem.hasMap
+            }
+        }
+
     }
 
     override fun getChangePayload(oldItem: MapListItem, newItem: MapListItem): Any? {

@@ -34,7 +34,7 @@ class MarginDividerItemDecoration(
         state: RecyclerView.State
     ) {
         val position = parent.getChildAdapterPosition(view)
-        if (position == parent.adapter?.itemCount?.minus(1)) {
+        if (shouldOmit(parent.adapter, position)) {
             outRect.setEmpty()
         } else {
             outRect.bottom = dividerHeight

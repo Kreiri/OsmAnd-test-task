@@ -8,12 +8,11 @@
     <color name="contentBackgroundColor">#ffffff</color>
     <color name="textColor">#212121</color>
     <color name="dividerColor">#e5e5e5</color>
-    <color name="primaryColor">#2175F3</color>
+    <color name="progressIndicatorColor">#2175F3</color>
     <color name="progressTrackColor">#F0F0F0</color>
 
     <color name="statusBarColor">@color/brandColorDark</color>
 
-    <color name="mapDownloadProgressIndicatorColor">@color/primaryColor</color>
     <color name="storageSpaceIndicatorColor">@color/brandColor</color>
 
     <color name="resourceDownloadedIconColor">#00ff00</color>

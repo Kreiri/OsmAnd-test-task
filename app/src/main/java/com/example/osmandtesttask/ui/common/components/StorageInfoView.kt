@@ -86,7 +86,6 @@ class StorageInfoView @JvmOverloads constructor(
         }
         if (ta.hasValue(R.styleable.StorageInfoView_barColor)) {
             val color = ta.getColor(R.styleable.StorageInfoView_barColor, 0)
-//            storageBar.progressTintList = ColorStateList.valueOf(color)
             storageBar.setIndicatorColor(color)
         }
         val barThickness = if (ta.hasValue(R.styleable.StorageInfoView_barThickness)) {

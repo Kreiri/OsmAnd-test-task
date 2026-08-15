@@ -11,8 +11,4 @@ data class RegionsList(val regions: List<Region>) {
         }
         return current
     }
-
-    companion object {
-        fun empty() = RegionsList(emptyList())
-    }
 }

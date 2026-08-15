@@ -81,7 +81,7 @@ class MapDownloadService : Service() {
     private fun composeNotificationTexts(state: DownloaderState): Pair<String, String> {
         val text: String
         val title: String
-         when (state) {
+        when (state) {
             is DownloaderState.Processing -> {
                 val count = state.enqueuedDownloads.size + 1
                 title = if (count > 1) {
@@ -95,33 +95,42 @@ class MapDownloadService : Service() {
                         val percentText = downloadState.progress.formatFractionAsPercents()
                         val total = downloadState.totalBytes.toReadableFileSize(this)
                         val downloaded = downloadState.downloadedBytes.toReadableFileSize(this)
-                        getString(R.string.notification_map_download_progress_text, name, percentText, downloaded, total)
+                        getString(
+                            R.string.notification_map_download_progress_text,
+                            name,
+                            percentText,
+                            downloaded,
+                            total
+                        )
                     }
 
                     DownloadState.Cancelled -> {
                         getString(R.string.notification_map_download_cancelled_text, name)
                     }
+
                     is DownloadState.Error -> {
                         getString(R.string.notification_map_download_error_text, name)
                     }
+
                     DownloadState.Finished -> {
                         getString(R.string.notification_map_download_completed_text, name)
                     }
                 }
             }
 
-             else -> {
-                 title = getString(R.string.notification_map_download_title)
-                 text = getString(R.string.notification_map_download_waiting_text)
-             }
-         }
-        return  title to text
+            else -> {
+                title = getString(R.string.notification_map_download_title)
+                text = getString(R.string.notification_map_download_waiting_text)
+            }
+        }
+        return title to text
     }
 
     private fun createNotification(state: DownloaderState): Notification {
         val (title, text) = composeNotificationTexts(state)
         return createNotification(title, text)
     }
+
     private fun createNotification(title: String, text: String): Notification {
         return notificationUtil.createNotification(
             title, text, iconRes = R.drawable.ic_action_import, silent = true

@@ -12,13 +12,12 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.osmandtesttask.R
 import com.example.osmandtesttask.domain.models.Region
-import com.example.osmandtesttask.domain.models.RegionType
 import com.example.osmandtesttask.ui.common.extensions.getCurrentLocale
 
 class MapsListAdapter(
-    private val onRegionItemTapped: (itemPath: List<Int>, item: Region) -> Unit,
-    private val onDownloadTapped: (itemPath: List<Int>, item: Region) -> Unit,
-    private val onCancelDownloadTapped: (itemPath: List<Int>, item: Region) -> Unit,
+    private val onRegionItemTapped: (itemPath: List<Int>, region: Region) -> Unit,
+    private val onDownloadTapped: (itemPath: List<Int>, region: Region) -> Unit,
+    private val onCancelDownloadTapped: (itemPath: List<Int>, region: Region) -> Unit,
 ) : ListAdapter<MapListItem, MapsListAdapter.ViewHolder>(MapListItemDiff) {
 
 
@@ -45,7 +44,11 @@ class MapsListAdapter(
             ViewType.RegionItem -> {
                 val view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_maps_list_region, parent, false)
-                RegionItemViewHolder(view)
+                RegionItemViewHolder(view).also { holder ->
+                    holder.itemView.setOnClickListener { handleItemClick(holder) }
+                    holder.downloadButton.setOnClickListener { handleDownloadClick(holder) }
+                    holder.cancelButton.setOnClickListener { handleCancelDownloadClick(holder) }
+                }
             }
 
             ViewType.ContinentHeader -> {
@@ -72,13 +75,7 @@ class MapsListAdapter(
         when (holder) {
             is RegionItemViewHolder -> {
                 val item = getItem(position) as? MapListItem.RegionItem ?: return
-                holder.bind(
-                    item,
-                    actualPayloads,
-                    onRegionItemTapped,
-                    onDownloadTapped,
-                    onCancelDownloadTapped
-                )
+                holder.bind(item, actualPayloads)
             }
 
             is ContinentHeaderViewHolder -> {
@@ -101,6 +98,39 @@ class MapsListAdapter(
         position: Int
     ) {
         bindViewHolder(holder, position, emptyList())
+    }
+
+    private fun withBindingAdapterPosition(holder: ViewHolder, action: (position: Int) -> Unit) {
+        val position = holder.bindingAdapterPosition
+        if (position == RecyclerView.NO_POSITION) return
+        action(position)
+    }
+
+    private fun handleDownloadClick(holder: RegionItemViewHolder) {
+        withBindingAdapterPosition(holder) { position ->
+            val item = getItem(position)
+            if (item is MapListItem.RegionItem) {
+                onDownloadTapped(item.indexPath, item.region)
+            }
+        }
+    }
+
+    private fun handleCancelDownloadClick(holder: RegionItemViewHolder) {
+        withBindingAdapterPosition(holder) { position ->
+            val item = getItem(position)
+            if (item is MapListItem.RegionItem) {
+                onCancelDownloadTapped(item.indexPath, item.region)
+            }
+        }
+    }
+
+    private fun handleItemClick(holder: RegionItemViewHolder) {
+        withBindingAdapterPosition(holder) { position ->
+            val item = getItem(position)
+            if (item is MapListItem.RegionItem) {
+                onRegionItemTapped(item.indexPath, item.region)
+            }
+        }
     }
 
     private enum class ViewType {
@@ -128,47 +158,27 @@ class MapsListAdapter(
 
         fun bind(
             item: MapListItem.RegionItem,
-            payloads: Set<PayloadFlags>,
-            onItemTapped: (path: List<Int>, region: Region) -> Unit,
-            onDownloadTapped: (path: List<Int>, region: Region) -> Unit,
-            onCancelDownloadTapped: (path: List<Int>, region: Region) -> Unit,
+            payloads: Set<PayloadFlags>
         ) {
-            val region = item.region
-
             val shouldUpdateAll = payloads.isEmpty()
             val progressChanged = payloads.contains(PayloadFlags.DOWNLOAD_PROGRESS)
             val statusChanged = payloads.contains(PayloadFlags.STATUS)
 
             if (shouldUpdateAll) {
-                val context = itemView.context
-                val locale = context.getCurrentLocale()
-                regionName.text = region.getLocalizedName(locale.language)
-                itemView.setOnClickListener {
-                    onItemTapped(item.indexPath, region)
-                }
+                regionName.text = item.displayedName
 
-                val icon = if (region.type == RegionType.MAP || region.map) {
-                    R.drawable.ic_map
-                } else {
-                    0
-                }
-                val showIconView = (icon != 0)
-
-                iconView.visibility = if (showIconView) View.VISIBLE else View.INVISIBLE
-                iconView.setImageResource(icon)
-
-                downloadButton.setOnClickListener {
-                    onDownloadTapped(item.indexPath, region)
-                }
-                cancelButton.setOnClickListener {
-                    onCancelDownloadTapped(item.indexPath, region)
-                }
+                /*
+                * NB: Doesn't seem right to show map icon for region that doesn't have a map,
+                * but design mockup did show it with the map icon.
+                * */
+                iconView.setImageResource(R.drawable.ic_map)
             }
 
             if (shouldUpdateAll || statusChanged) {
                 val context = itemView.context
-                val isDownloadable = region.map
-                val isActiveOrEnqueued = item.status == DownloadStatus.ACTIVE || item.status == DownloadStatus.ENQUEUED
+                val isDownloadable = item.hasMap
+                val isActiveOrEnqueued =
+                    item.status == DownloadStatus.ACTIVE || item.status == DownloadStatus.ENQUEUED
                 val isDownloaded = item.status == DownloadStatus.DOWNLOADED
                 downloadButton.visibility =
                     if (isDownloadable && !isActiveOrEnqueued) View.VISIBLE else View.GONE

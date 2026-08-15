@@ -4,7 +4,7 @@ import android.util.Log
 import com.example.osmandtesttask.BuildConfig
 
 
-object Logs {
+object Logger {
     private const val DEFAULT_TAG = "OSMTT"
     fun d(subtag: String, message: String) {
         if (BuildConfig.DEBUG) {

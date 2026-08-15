@@ -31,9 +31,9 @@ class MapsListFragment : Fragment() {
 
     private val mapsListController = MapsListController(
         MapsListAdapter(
-            onRegionItemTapped = ::onRegionItemTapped,
-            onDownloadTapped = ::onDownloadTapped,
-            onCancelDownloadTapped = ::onCancelDownloadTapped
+            onRegionItemTapped = { indexPath, region -> onRegionItemTapped(indexPath, region) },
+            onDownloadTapped = { _, region -> onDownloadTapped(region) },
+            onCancelDownloadTapped = { _, region -> onCancelDownloadTapped(region) }
         )
     )
 
@@ -46,7 +46,7 @@ class MapsListFragment : Fragment() {
         permissionContinuation = null
     }
 
-    suspend fun requestPermission(permission: String): Boolean =
+    private suspend fun requestPermission(permission: String): Boolean =
         suspendCancellableCoroutine { continuation ->
             permissionContinuation = continuation
             continuation.invokeOnCancellation {
@@ -80,6 +80,11 @@ class MapsListFragment : Fragment() {
         subscribeToUiState()
     }
 
+    override fun onDestroyView() {
+        mapsListController.detach()
+        super.onDestroyView()
+    }
+
     private fun subscribeToDownloadErrors() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -104,9 +109,7 @@ class MapsListFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.uiState.collect { state ->
                     when (state) {
-                        UIState.Loading -> {
-                            // todo: "loading regions list" indication
-                        }
+                        UIState.Loading -> {}
 
                         is UIState.Success -> {
                             mapsListController.setItems(
@@ -124,10 +127,10 @@ class MapsListFragment : Fragment() {
 
     private fun setupRecycler(view: View) {
         val regionsRecycler: RecyclerView = view.findViewById(R.id.regions_recycler)
-        mapsListController.setupRecycler(regionsRecycler)
+        mapsListController.attach(regionsRecycler)
     }
 
-    private fun onDownloadTapped(indexPath: List<Int>, item: Region) {
+    private fun onDownloadTapped(item: Region) {
         lifecycleScope.launch {
             if (requestPermission(Manifest.permission.POST_NOTIFICATIONS)) {
                 vm.requestDownload(item)
@@ -136,7 +139,7 @@ class MapsListFragment : Fragment() {
     }
 
 
-    private fun onCancelDownloadTapped(indexPath: List<Int>, item: Region) {
+    private fun onCancelDownloadTapped(item: Region) {
         vm.cancelDownload(item)
     }
 

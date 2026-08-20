@@ -55,7 +55,11 @@ sealed interface MapDownloadError : AppError {
     data class ServerError(override val download: DownloadTask, val code: Int) : MapDownloadError,
         NetworkError
 
-    data class InsufficientStorage(override val download: DownloadTask) : MapDownloadError,
+    data class InsufficientStorage(
+        override val download: DownloadTask,
+        val requiredBytes: Long,
+        val availableBytes: Long
+    ) : MapDownloadError,
         StorageError
 
     data class Unknown(override val download: DownloadTask, val cause: Throwable) : MapDownloadError

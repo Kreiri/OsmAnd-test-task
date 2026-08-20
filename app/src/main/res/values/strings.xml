@@ -4,6 +4,7 @@
     <string name="error_msg_maps_list_download_failed">Maps list download failed.</string>
     <string name="error_msg_map_download_failed">%s: download failed.</string>
     <string name="error_msg_map_download_cancelled">%s: download cancelled.</string>
+    <string name="error_msg_map_download_insufficient_storage">%1$s: not enough storage: %2$s required, only %3$s available.</string>
 
     <string name="screen_title_downlaod_maps">Download Maps</string>
 

@@ -5,6 +5,7 @@ import com.example.osmandtesttask.common.Logger
 import com.example.osmandtesttask.common.capitalizeFirstChar
 import com.example.osmandtesttask.common.removeAndReturnIf
 import com.example.osmandtesttask.data.api.MapDownloadApiService
+import com.example.osmandtesttask.data.util.isInsufficientStorage
 import com.example.osmandtesttask.domain.LocaleProvider
 import com.example.osmandtesttask.domain.downloader.DownloadState
 import com.example.osmandtesttask.domain.downloader.DownloadTask
@@ -181,7 +182,24 @@ class MapDownloaderImpl(
             if (response.isSuccessful) {
                 Logger.d("Downloader", "received success response for ${download.downloadName}")
                 val body = response.body() ?: throw HttpException(response)
-                saveFileWithProgress(download, body, destination, downloadDestination)
+                val contentLength = body.contentLength()
+                if (!storageManager.hasAvailable(contentLength))
+                    throw InsufficientStorageException(
+                        contentLength,
+                        storageManager.availableBytes()
+                    )
+                try {
+                    saveFileWithProgress(download, body, destination, downloadDestination)
+                } catch (e: Throwable) {
+                    if (e.isInsufficientStorage()) {
+                        throw InsufficientStorageException(
+                            contentLength,
+                            storageManager.availableBytes()
+                        )
+                    } else {
+                        throw e
+                    }
+                }
                 storageManager.update()
             } else {
                 storageManager.update()
@@ -200,7 +218,7 @@ class MapDownloaderImpl(
         download: DownloadTask,
         body: ResponseBody,
         destination: File,
-        downloadDestination: File
+        downloadDestination: File,
     ) {
         try {
             body.toFileWithProgress(downloadDestination).collect { downloadState ->

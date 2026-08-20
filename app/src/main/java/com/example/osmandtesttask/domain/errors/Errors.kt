@@ -5,7 +5,7 @@ interface AppError {
     class Unknown(val cause: Throwable) : AppError
     object NoInternet : AppError, NetworkError
     class ServerError(val code: Int) : AppError, NetworkError
-    object InsufficientStorage : AppError, StorageError
+    class InsufficientStorage(val requiredBytes: Long, val availableBytes: Long) : AppError, StorageError
 }
 
 interface NetworkError : AppError

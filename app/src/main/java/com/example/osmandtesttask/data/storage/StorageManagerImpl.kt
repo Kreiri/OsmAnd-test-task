@@ -32,4 +32,19 @@ class StorageManagerImpl(
             _storageInfo.value = info
         }
     }
+
+    override fun hasAvailable(bytes: Long): Boolean {
+        if (bytes <= 0) return true
+        val info = _storageInfo.value
+        if (info.availableBytes == -1L) return true
+        return info.availableBytes >= bytes
+    }
+
+    override fun availableBytes(): Long {
+        return _storageInfo.value.availableBytes
+    }
+
+    override fun totalBytes(): Long {
+        return _storageInfo.value.totalBytes
+    }
 }

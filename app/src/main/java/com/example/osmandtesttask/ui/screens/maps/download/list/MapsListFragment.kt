@@ -16,6 +16,7 @@ import com.example.osmandtesttask.R
 import com.example.osmandtesttask.domain.downloader.MapDownloadError
 import com.example.osmandtesttask.domain.models.Region
 import com.example.osmandtesttask.ui.common.extensions.getCurrentLocale
+import com.example.osmandtesttask.ui.common.extensions.toReadableFileSize
 import com.example.osmandtesttask.ui.common.navigation.NavDestination
 import com.example.osmandtesttask.ui.common.navigation.NavigationViewModel
 import kotlinx.coroutines.launch
@@ -95,6 +96,15 @@ class MapsListFragment : Fragment() {
                             R.string.error_msg_map_download_cancelled,
                             downloadName
                         )
+                        is MapDownloadError.InsufficientStorage -> {
+                            val context = requireContext()
+                            val requiredBytes = error.requiredBytes.toReadableFileSize(context)
+                            val availableBytes = error.availableBytes.toReadableFileSize(context)
+                            getString(
+                                R.string.error_msg_map_download_insufficient_storage,
+                                downloadName, requiredBytes, availableBytes
+                            )
+                        }
 
                         else -> getString(R.string.error_msg_map_download_failed, downloadName)
                     }

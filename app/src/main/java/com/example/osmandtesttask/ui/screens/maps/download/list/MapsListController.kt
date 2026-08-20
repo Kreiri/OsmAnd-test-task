@@ -77,7 +77,10 @@ class MapsListController(
     ): List<MapListItem> {
         val list = mutableListOf<MapListItem>()
         val locale = localeProvider.invoke()
-        regions.forEachIndexed { regionIndex, region ->
+        val sorted = regions.sortedWith { region1, region2 ->
+            regionsComparator.compare(region1, region2)
+        }
+        sorted.forEachIndexed { regionIndex, region ->
             val regionPath = indexPath + regionIndex
             if (region.type == RegionType.CONTINENT) {
                 list.add(makeContinentHeaderItem(region, locale))

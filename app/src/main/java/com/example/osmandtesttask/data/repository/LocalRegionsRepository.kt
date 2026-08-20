@@ -7,6 +7,8 @@ import com.example.osmandtesttask.domain.AssetProvider
 import com.example.osmandtesttask.domain.models.AppResult
 import com.example.osmandtesttask.domain.models.RegionsList
 import com.example.osmandtesttask.domain.repository.RegionRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class LocalRegionsRepository(
     private val assetProvider: AssetProvider,
@@ -15,14 +17,15 @@ class LocalRegionsRepository(
     private val parser = RemoteRegionsListParser()
     private var data: RegionsList? = null
 
-    override suspend fun getRegionsList(): AppResult<RegionsList> {
+    override suspend fun getRegionsList(): AppResult<RegionsList> = withContext(Dispatchers.IO){
         val cached = data
-        if (cached != null) return AppResult.success(cached)
+        if (cached != null) return@withContext AppResult.success(cached)
 
-        return try {
+        try {
             val stream = assetProvider.invoke(regionsFilePath)
-            val data = stream.use { parser.parse(it) }
-            AppResult.success(data.toLocal())
+            val data = stream.use { parser.parse(it) }.toLocal()
+            this@LocalRegionsRepository.data = data
+            AppResult.success(data)
         } catch (e: Throwable) {
             Logger.d("regions", "regions list load failed: ${e.message}")
             val appError = e.toAppError()

@@ -123,21 +123,19 @@ class MapsListController(
     ): MapListItem.RegionItem {
         val status: DownloadStatus
         val downloadProgress: Float
-        if (downloaderState is DownloaderState.Processing) {
-            if (downloaderState.hasActive(region)) {
-                status = DownloadStatus.ACTIVE
-                downloadProgress = when (val ds = downloaderState.downloadState) {
-                    is DownloadState.Progress -> ds.progress
-                    is DownloadState.Finished -> 1f
-                    else -> 0f
-                }
+        if (downloaderState is DownloaderState.Processing && downloaderState.hasActive(region)) {
+            status = DownloadStatus.ACTIVE
+            downloadProgress = when (val ds = downloaderState.downloadState) {
+                is DownloadState.Progress -> ds.progress
+                is DownloadState.Finished -> 1f
+                else -> 0f
+            }
+        } else if (downloaderState is DownloaderState.Processing && downloaderState.hasQueued(region)) {
+            downloadProgress = 0f
+            status = if (downloaderState.hasQueued(region)) {
+                DownloadStatus.ENQUEUED
             } else {
-                downloadProgress = 0f
-                status = if (downloaderState.hasQueued(region)) {
-                    DownloadStatus.ENQUEUED
-                } else {
-                    DownloadStatus.NONE
-                }
+                DownloadStatus.NONE
             }
         } else {
             downloadProgress = 0f
